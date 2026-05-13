@@ -176,22 +176,23 @@ body.__tint-on .__tint-youtube-card {
 }
 
 body.__tint-on .__tint-youtube-card::before {
-  inset: -4px -5px !important;
-  border-radius: 16px !important;
+  inset: -8px -7px !important;
+  border-radius: 20px !important;
   background: radial-gradient(
     ellipse at center,
-    rgba(var(--tint-c), clamp(0.04, calc(var(--tint-i, 0.5) * 0.12), 0.09)) 0%,
-    rgba(var(--tint-c), clamp(0.02, calc(var(--tint-i, 0.5) * 0.07), 0.055)) 48%,
+    rgba(var(--tint-c), clamp(0.04, calc(var(--tint-i, 0.5) * 0.085), 0.08)) 0%,
+    rgba(var(--tint-c), clamp(0.018, calc(var(--tint-i, 0.5) * 0.045), 0.045)) 54%,
     rgba(var(--tint-c), 0) 100%
   ) !important;
+  filter: blur(2px) saturate(102%) !important;
   mix-blend-mode: multiply !important;
 }
 
 body.__tint-on .__tint-youtube-card:hover::before {
   background: radial-gradient(
     ellipse at center,
-    rgba(var(--tint-c), clamp(0.06, calc(var(--tint-i, 0.5) * 0.18), 0.12)) 0%,
-    rgba(var(--tint-c), clamp(0.03, calc(var(--tint-i, 0.5) * 0.095), 0.075)) 50%,
+    rgba(var(--tint-c), clamp(0.055, calc(var(--tint-i, 0.5) * 0.11), 0.10)) 0%,
+    rgba(var(--tint-c), clamp(0.024, calc(var(--tint-i, 0.5) * 0.055), 0.055)) 54%,
     rgba(var(--tint-c), 0) 100%
   ) !important;
 }
@@ -199,32 +200,30 @@ body.__tint-on .__tint-youtube-card:hover::before {
 body.__tint-on .__tint-youtube-card::after {
   content: attr(data-tint-label) !important;
   position: absolute !important;
-  top: 6px !important;
-  left: 8px !important;
+  top: 7px !important;
+  left: 10px !important;
   z-index: 2 !important;
-  max-width: calc(100% - 16px) !important;
-  padding: 2px 6px !important;
-  border-radius: 999px !important;
-  background: rgba(18, 18, 18, 0.46) !important;
-  color: rgba(255, 255, 255, 0.82) !important;
-  -webkit-backdrop-filter: blur(8px) !important;
-  backdrop-filter: blur(8px) !important;
+  max-width: calc(100% - 20px) !important;
+  padding: 0 !important;
+  background: transparent !important;
+  color: rgba(var(--tint-c), 0.72) !important;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.14) !important;
   font-family: -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", system-ui, sans-serif !important;
   font-size: 9px !important;
-  line-height: 1.35 !important;
+  line-height: 1.2 !important;
   font-weight: 400 !important;
-  letter-spacing: 0.02em !important;
+  letter-spacing: 0.035em !important;
   white-space: nowrap !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   opacity: 0 !important;
   transform: translateY(-2px) !important;
-  transition: opacity 160ms ease, transform 160ms ease !important;
+  transition: opacity 180ms ease, transform 180ms ease !important;
   pointer-events: none !important;
 }
 
 body.__tint-on .__tint-youtube-card:hover::after {
-  opacity: 1 !important;
+  opacity: 0.82 !important;
   transform: translateY(0) !important;
 }
 
@@ -317,8 +316,8 @@ body.__tint-on ytd-comment-renderer .__tint-mark::before {
   border-radius: 8px !important;
   background: radial-gradient(
     ellipse at center,
-    rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.035)) 0%,
-    rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.018)) 52%,
+    rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.018)) 0%,
+    rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.008)) 52%,
     rgba(var(--tint-c), 0) 100%
   ) !important;
 }
@@ -328,8 +327,8 @@ body.__tint-on ytd-comment-view-model .__tint-mark:hover::before,
 body.__tint-on ytd-comment-renderer .__tint-mark:hover::before {
   background: radial-gradient(
     ellipse at center,
-    rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.05)) 0%,
-    rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.025)) 52%,
+    rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.026)) 0%,
+    rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.012)) 52%,
     rgba(var(--tint-c), 0) 100%
   ) !important;
 }
@@ -347,10 +346,78 @@ body.__tint-on ytd-comment-renderer .__tint-mark::after {
   background: linear-gradient(
     to bottom,
     rgba(var(--tint-c), 0),
-    rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.12)),
+    rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.055)),
     rgba(var(--tint-c), 0)
   ) !important;
   box-shadow: none !important;
-  opacity: 0.55 !important;
+  opacity: 0.34 !important;
   pointer-events: none !important;
+}
+
+
+/* ============================================================
+ * YOUTUBE SHORTS ATMOSPHERE
+ * Fullscreen psychological weather: ambient wash and edge glow only.
+ * ============================================================ */
+body.__tint-on.__tint-youtube-shorts #__tint-page-wash {
+  inset: -18vh -16vw !important;
+  background:
+    radial-gradient(
+      ellipse 72vw 78vh at 50% 50%,
+      rgba(var(--tint-page-c, var(--tint-orange)), var(--tint-page-opacity, 0.032)) 0%,
+      rgba(var(--tint-page-c, var(--tint-orange)), calc(var(--tint-page-opacity, 0.032) * 0.56)) 42%,
+      rgba(var(--tint-page-c, var(--tint-orange)), calc(var(--tint-page-opacity, 0.032) * 0.18)) 70%,
+      rgba(var(--tint-page-c, var(--tint-orange)), 0) 100%
+    ),
+    linear-gradient(
+      90deg,
+      rgba(var(--tint-page-c, var(--tint-orange)), calc(var(--tint-page-opacity, 0.032) * 1.15)),
+      rgba(var(--tint-page-c, var(--tint-orange)), 0) 15%,
+      rgba(var(--tint-page-c, var(--tint-orange)), 0) 85%,
+      rgba(var(--tint-page-c, var(--tint-orange)), calc(var(--tint-page-opacity, 0.032) * 1.15))
+    ) !important;
+  filter: blur(26px) saturate(104%) !important;
+}
+
+body.__tint-on.__tint-youtube-shorts[data-tint-shorts-atmosphere="green"] #__tint-page-wash {
+  animation: __tint-shorts-breathe 7.5s ease-in-out infinite !important;
+}
+
+body.__tint-on.__tint-youtube-shorts[data-tint-shorts-atmosphere="blue"] #__tint-page-wash {
+  animation: __tint-shorts-calm 12s ease-in-out infinite !important;
+}
+
+body.__tint-on.__tint-youtube-shorts[data-tint-shorts-atmosphere="orange"] #__tint-page-wash {
+  animation: __tint-shorts-pulse 2.8s ease-in-out infinite !important;
+}
+
+body.__tint-on.__tint-youtube-shorts[data-tint-shorts-atmosphere="gray"] #__tint-page-wash {
+  animation: __tint-shorts-haze 5.5s steps(4, end) infinite !important;
+}
+
+body.__tint-on.__tint-youtube-shorts .__tint-youtube-card::before,
+body.__tint-on.__tint-youtube-shorts .__tint-youtube-card::after {
+  content: none !important;
+}
+
+@keyframes __tint-shorts-breathe {
+  0%, 100% { opacity: 0.78; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.025); }
+}
+
+@keyframes __tint-shorts-calm {
+  0%, 100% { opacity: 0.88; }
+  50% { opacity: 0.94; }
+}
+
+@keyframes __tint-shorts-pulse {
+  0%, 100% { opacity: 0.72; transform: scale(1); }
+  48% { opacity: 1; transform: scale(1.012); }
+}
+
+@keyframes __tint-shorts-haze {
+  0%, 100% { opacity: 0.72; transform: translate3d(0, 0, 0); }
+  25% { opacity: 0.8; transform: translate3d(0.35vw, -0.2vh, 0); }
+  50% { opacity: 0.76; transform: translate3d(-0.25vw, 0.15vh, 0); }
+  75% { opacity: 0.82; transform: translate3d(0.15vw, 0.25vh, 0); }
 }

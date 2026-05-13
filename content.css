@@ -85,6 +85,34 @@
 }
 
 /* ============================================================
+ * PAGE-LEVEL YOUTUBE ATMOSPHERE
+ * Extremely low-opacity radial wash. It has no edge, no box, and no
+ * hit area; the page should feel changed before it looks changed.
+ * ============================================================ */
+#__tint-page-wash {
+  position: fixed !important;
+  inset: -16vh -10vw !important;
+  z-index: 2147483000 !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
+  transition: opacity 900ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+  background:
+    radial-gradient(
+      ellipse 82vw 62vh at var(--tint-page-x, 50%) var(--tint-page-y, 38%),
+      rgba(var(--tint-page-c, var(--tint-orange)), var(--tint-page-opacity, 0.04)) 0%,
+      rgba(var(--tint-page-c, var(--tint-orange)), calc(var(--tint-page-opacity, 0.04) * 0.58)) 36%,
+      rgba(var(--tint-page-c, var(--tint-orange)), calc(var(--tint-page-opacity, 0.04) * 0.18)) 64%,
+      rgba(var(--tint-page-c, var(--tint-orange)), 0) 100%
+    ) !important;
+  filter: blur(22px) saturate(105%) !important;
+  mix-blend-mode: multiply !important;
+}
+
+body.__tint-on.__tint-youtube-atmosphere #__tint-page-wash {
+  opacity: 1 !important;
+}
+
+/* ============================================================
  * ATMOSPHERIC OVERLAY
  * Radial gradient haze with blur. Soft edges, no defined box.
  * ============================================================ */
@@ -212,4 +240,30 @@ body.__tint-on .__tint-mark:hover::before {
   color: #6B6B6B !important;
   letter-spacing: 0.02em !important;
   font-weight: 400 !important;
+}
+
+
+/* ============================================================
+ * YOUTUBE COMMENT EDGE GLOW
+ * A quiet left-edge presence for tinted comments, not a border or box.
+ * ============================================================ */
+body.__tint-on ytd-comment-thread-renderer .__tint-mark::after,
+body.__tint-on ytd-comment-view-model .__tint-mark::after,
+body.__tint-on ytd-comment-renderer .__tint-mark::after {
+  content: "" !important;
+  position: absolute !important;
+  top: -6px !important;
+  bottom: -6px !important;
+  left: -13px !important;
+  width: 2px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(
+    to bottom,
+    rgba(var(--tint-c), 0),
+    rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.22)),
+    rgba(var(--tint-c), 0)
+  ) !important;
+  box-shadow: 0 0 14px rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.16)) !important;
+  opacity: 0.78 !important;
+  pointer-events: none !important;
 }

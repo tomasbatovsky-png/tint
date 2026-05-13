@@ -200,6 +200,15 @@
     "yt-lockup-view-model"
   ];
 
+  const YOUTUBE_WATCH_RECOMMENDATION_SELECTORS = [
+    "ytd-compact-video-renderer",
+    "ytd-compact-radio-renderer",
+    "ytd-compact-playlist-renderer",
+    "ytd-watch-next-secondary-results-renderer ytd-compact-video-renderer",
+    "#secondary ytd-compact-video-renderer",
+    "#related ytd-compact-video-renderer"
+  ];
+
   const YOUTUBE_SHORTS_SELECTORS = [
     "ytd-reel-video-renderer",
     "ytd-shorts",
@@ -262,6 +271,10 @@
     return isYouTubePage() && /(^|\/)shorts(\/|$)/i.test(window.location.pathname);
   }
 
+  function isYouTubeWatchPage() {
+    return isYouTubePage() && window.location.pathname === "/watch";
+  }
+
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
   }
@@ -319,20 +332,57 @@
 
     for (const sel of YOUTUBE_THUMBNAIL_CLUSTER_SELECTORS) {
       document.querySelectorAll(sel).forEach(el => {
-        const thumb = el.querySelector("#thumbnail, a#thumbnail, ytd-thumbnail, yt-thumbnail-view-model, .yt-thumbnail-view-model");
-        if (!thumb) return;
-
-        const rect = el.getBoundingClientRect();
-        const thumbRect = thumb.getBoundingClientRect();
-        const isVisible = rect.bottom > 0 && rect.top < window.innerHeight && rect.width >= 160 && rect.height >= 80;
-        const thumbVisible = thumbRect.width >= 80 && thumbRect.height >= 45;
-        if (isVisible && thumbVisible) clusters.add(el);
+        if (isVisibleYouTubeThumbnailCluster(el)) clusters.add(el);
       });
     }
 
-    return [...clusters]
-      .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
-      .slice(0, limit);
+    return sortYouTubeCardsByScreenPosition([...clusters]).slice(0, limit);
+  }
+
+  function collectVisibleYouTubeWatchRecommendationCards(limit = 36) {
+    const cards = new Set();
+
+    for (const sel of YOUTUBE_WATCH_RECOMMENDATION_SELECTORS) {
+      document.querySelectorAll(sel).forEach(el => {
+        const card = el.closest("ytd-compact-video-renderer, ytd-compact-radio-renderer, ytd-compact-playlist-renderer") || el;
+        if (isVisibleYouTubeWatchRecommendationCard(card)) cards.add(card);
+      });
+    }
+
+    return sortYouTubeCardsByScreenPosition([...cards]).slice(0, limit);
+  }
+
+  function isVisibleYouTubeThumbnailCluster(el) {
+    const thumb = el.querySelector("#thumbnail, a#thumbnail, ytd-thumbnail, yt-thumbnail-view-model, .yt-thumbnail-view-model");
+    if (!thumb) return false;
+
+    const rect = el.getBoundingClientRect();
+    const thumbRect = thumb.getBoundingClientRect();
+    const isVisible = rect.bottom > 0 && rect.top < window.innerHeight && rect.width >= 160 && rect.height >= 80;
+    const thumbVisible = thumbRect.width >= 80 && thumbRect.height >= 45;
+    return isVisible && thumbVisible;
+  }
+
+  function isVisibleYouTubeWatchRecommendationCard(el) {
+    if (!el || !el.matches("ytd-compact-video-renderer, ytd-compact-radio-renderer, ytd-compact-playlist-renderer")) return false;
+    if (!el.closest("ytd-watch-next-secondary-results-renderer, #secondary, #related")) return false;
+
+    const thumb = el.querySelector("#thumbnail, a#thumbnail, ytd-thumbnail, yt-thumbnail-view-model, .yt-thumbnail-view-model");
+    const rect = el.getBoundingClientRect();
+    const thumbRect = thumb ? thumb.getBoundingClientRect() : null;
+    const isVisible = rect.bottom > 0 && rect.top < window.innerHeight + 900 && rect.right > 0 && rect.left < window.innerWidth;
+    const cardSized = rect.width >= 220 && rect.height >= 56;
+    const thumbVisible = thumbRect ? thumbRect.width >= 72 && thumbRect.height >= 40 : true;
+
+    return isVisible && cardSized && thumbVisible && hasUsableText(el, 4);
+  }
+
+  function sortYouTubeCardsByScreenPosition(cards) {
+    return cards.sort((a, b) => {
+      const aRect = a.getBoundingClientRect();
+      const bRect = b.getBoundingClientRect();
+      return (aRect.top - bRect.top) || (aRect.left - bRect.left);
+    });
   }
 
   function getYouTubeClusterText(el) {
@@ -454,7 +504,9 @@
     }
     clearYouTubeShortsAtmosphere();
 
-    const clusters = collectVisibleYouTubeThumbnailClusters();
+    const clusters = isYouTubeWatchPage()
+      ? collectVisibleYouTubeWatchRecommendationCards()
+      : collectVisibleYouTubeThumbnailClusters();
     if (clusters.length < 3) {
       clearYouTubePageAtmosphere();
       return;
@@ -657,13 +709,20 @@
       const shortsAtmosphere = getVisibleYouTubeShortsAtmosphere({ debug: isYouTubeShortsPage() });
       const shortsActive = Boolean(shortsAtmosphere);
       if (shortsActive) console.log("[Tint] shorts detected");
-      const cards = shortsActive ? [] : collectVisibleYouTubeThumbnailClusters(36);
+      const watchRecommendationsActive = isYouTubeWatchPage() && !shortsActive;
+      const cards = shortsActive
+        ? []
+        : watchRecommendationsActive
+          ? collectVisibleYouTubeWatchRecommendationCards(36)
+          : collectVisibleYouTubeThumbnailClusters(36);
       const atmospheres = { green: 0, blue: 0, orange: 0, gray: 0 };
 
       cards.forEach(el => {
         const text = getYouTubeClusterText(el);
         if (text.length < 8) return;
-        const result = scoreYouTubeCardAtmosphere(text);
+        const result = watchRecommendationsActive
+          ? scoreYouTubeClusterAtmosphere(text)
+          : scoreYouTubeCardAtmosphere(text);
         if (!result) return;
         atmospheres[result.atm] += 1;
         fresh.push({
@@ -676,8 +735,13 @@
         });
       });
 
-      console.log("[Tint] youtube cards", cards.length);
-      console.log("[Tint] youtube atmospheres", atmospheres);
+      if (watchRecommendationsActive) {
+        console.log(`[Tint] youtube watch recommendations ${cards.length}`);
+        console.log("[Tint] youtube watch atmospheres", atmospheres);
+      } else {
+        console.log("[Tint] youtube cards", cards.length);
+        console.log("[Tint] youtube atmospheres", atmospheres);
+      }
     }
 
     for (const el of candidates) {

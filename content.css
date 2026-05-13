@@ -227,6 +227,49 @@ body.__tint-on .__tint-youtube-card:hover::after {
   transform: translateY(0) !important;
 }
 
+
+/* YouTube watch recommendations: paint the visible compact card surface. */
+body.__tint-on .__tint-youtube-watch-card {
+  position: relative !important;
+  isolation: isolate !important;
+  overflow: visible !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background-color: transparent !important;
+}
+
+body.__tint-on .__tint-youtube-watch-card::before {
+  inset: -8px -10px !important;
+  border-radius: 18px !important;
+  opacity: 0.10 !important;
+  background: radial-gradient(
+    ellipse 118% 132% at 44% 50%,
+    rgba(var(--tint-c), 0.96) 0%,
+    rgba(var(--tint-c), 0.62) 38%,
+    rgba(var(--tint-c), 0.28) 68%,
+    rgba(var(--tint-c), 0) 100%
+  ) !important;
+  filter: blur(7px) saturate(103%) !important;
+  mix-blend-mode: multiply !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+body.__tint-on .__tint-youtube-watch-card:hover::before {
+  opacity: 0.14 !important;
+  background: radial-gradient(
+    ellipse 118% 132% at 44% 50%,
+    rgba(var(--tint-c), 0.96) 0%,
+    rgba(var(--tint-c), 0.62) 38%,
+    rgba(var(--tint-c), 0.28) 68%,
+    rgba(var(--tint-c), 0) 100%
+  ) !important;
+}
+
+body.__tint-on .__tint-youtube-watch-card::after {
+  content: none !important;
+}
+
 /* ============================================================
  * REASON CARD
  * Floating small card near clicked element. Telegram-style copy.

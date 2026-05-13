@@ -2,7 +2,7 @@
  * Tint — Local Signal Engine v0.1
  *
  * Each signal exposes a detect(text) function that returns a score in [0, 1].
- * Heuristics are intentionally conservative. Below 0.25 = no overlay.
+ * Heuristics are intentionally conservative. Below 0.12 = no overlay.
  *
  * All detection is structural / linguistic pattern matching.
  * No AI. No external calls. No content leaves the browser.
@@ -206,7 +206,7 @@
         best = { key, intensity: score };
       }
     }
-    if (bestScore < 0.25) return null;
+    if (bestScore < 0.12) return null;
     return best;
   }
 

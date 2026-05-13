@@ -371,12 +371,32 @@ body.__tint-on.__tint-youtube-shorts #__tint-page-wash {
     ),
     linear-gradient(
       90deg,
-      rgba(var(--tint-page-c, var(--tint-orange)), calc(var(--tint-page-opacity, 0.032) * 1.15)),
+      rgba(var(--tint-page-c, var(--tint-orange)), var(--tint-page-edge-opacity, 0.08)),
       rgba(var(--tint-page-c, var(--tint-orange)), 0) 15%,
       rgba(var(--tint-page-c, var(--tint-orange)), 0) 85%,
-      rgba(var(--tint-page-c, var(--tint-orange)), calc(var(--tint-page-opacity, 0.032) * 1.15))
+      rgba(var(--tint-page-c, var(--tint-orange)), var(--tint-page-edge-opacity, 0.08))
     ) !important;
   filter: blur(26px) saturate(104%) !important;
+}
+
+
+body.__tint-on.__tint-youtube-shorts.__tint-youtube-shorts-fallback #__tint-page-wash {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(var(--tint-page-c, var(--tint-orange)), var(--tint-page-opacity, 0.035)),
+      rgba(var(--tint-page-c, var(--tint-orange)), 0) 17%,
+      rgba(var(--tint-page-c, var(--tint-orange)), 0) 83%,
+      rgba(var(--tint-page-c, var(--tint-orange)), var(--tint-page-opacity, 0.035))
+    ),
+    linear-gradient(
+      180deg,
+      rgba(var(--tint-page-c, var(--tint-orange)), calc(var(--tint-page-opacity, 0.035) * 0.62)),
+      rgba(var(--tint-page-c, var(--tint-orange)), 0) 18%,
+      rgba(var(--tint-page-c, var(--tint-orange)), 0) 82%,
+      rgba(var(--tint-page-c, var(--tint-orange)), calc(var(--tint-page-opacity, 0.035) * 0.62))
+    ) !important;
+  filter: blur(32px) saturate(103%) !important;
 }
 
 body.__tint-on.__tint-youtube-shorts[data-tint-shorts-atmosphere="green"] #__tint-page-wash {
@@ -393,6 +413,10 @@ body.__tint-on.__tint-youtube-shorts[data-tint-shorts-atmosphere="orange"] #__ti
 
 body.__tint-on.__tint-youtube-shorts[data-tint-shorts-atmosphere="gray"] #__tint-page-wash {
   animation: __tint-shorts-haze 5.5s steps(4, end) infinite !important;
+}
+
+body.__tint-on.__tint-youtube-shorts.__tint-youtube-shorts-fallback #__tint-page-wash {
+  animation: none !important;
 }
 
 body.__tint-on.__tint-youtube-shorts .__tint-youtube-card::before,

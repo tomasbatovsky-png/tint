@@ -77,11 +77,21 @@
     document.body.appendChild(cardEl);
   }
 
+  function ensurePageWash() {
+    if (pageWashEl && pageWashEl.isConnected) return pageWashEl;
+
+    pageWashEl = document.getElementById("__tint-page-wash");
+    if (!pageWashEl) {
+      pageWashEl = document.createElement("div");
+      pageWashEl.id = "__tint-page-wash";
+      pageWashEl.setAttribute("aria-hidden", "true");
+    }
+    if (pageWashEl.parentNode !== document.body) document.body.appendChild(pageWashEl);
+    return pageWashEl;
+  }
+
   function createPageWash() {
-    pageWashEl = document.createElement("div");
-    pageWashEl.id = "__tint-page-wash";
-    pageWashEl.setAttribute("aria-hidden", "true");
-    document.body.appendChild(pageWashEl);
+    ensurePageWash();
   }
 
   function showCard(el) {
@@ -434,7 +444,8 @@
   }
 
   function updateYouTubePageAtmosphere() {
-    if (!enabled || !isYouTubePage() || !pageWashEl) return;
+    if (!enabled || !isYouTubePage()) return;
+    ensurePageWash();
 
     const shorts = getVisibleYouTubeShortsAtmosphere();
     if (shorts) {
@@ -571,21 +582,31 @@
   function applyYouTubeShortsAtmosphere(result) {
     const atm = result.atm || "orange";
     const color = ATM_COLORS[atm].match(/\d+/g).join(", ");
-    const opacity = result.opacity || (result.fallback ? 0.035 : 0.06);
+    const wash = ensurePageWash();
+    const opacity = 0.10;
+    const edgeOpacity = 0.14;
 
     document.body.classList.add("__tint-youtube-atmosphere", "__tint-youtube-shorts");
     document.body.classList.toggle("__tint-youtube-shorts-fallback", Boolean(result.fallback));
     document.body.dataset.tintShortsAtmosphere = atm;
-    pageWashEl.style.setProperty("--tint-page-c", color);
-    pageWashEl.style.setProperty("--tint-page-opacity", opacity.toFixed(3));
-    pageWashEl.style.setProperty("--tint-page-edge-opacity", (result.fallback ? 0.035 : 0.08).toFixed(3));
-    pageWashEl.style.setProperty("--tint-page-x", "50%");
-    pageWashEl.style.setProperty("--tint-page-y", "50%");
+    wash.classList.add("__tint-page-wash-active", "__tint-shorts-wash");
+    wash.dataset.tintShortsAtmosphere = atm;
+    wash.style.setProperty("--tint-page-c", color);
+    wash.style.setProperty("--tint-page-opacity", opacity.toFixed(2));
+    wash.style.setProperty("--tint-page-edge-opacity", edgeOpacity.toFixed(2));
+    wash.style.setProperty("--tint-page-x", "50%");
+    wash.style.setProperty("--tint-page-y", "50%");
+
+    console.log(`[Tint] shorts wash applied ${atm} opacity ${opacity.toFixed(2)}`);
+    console.log(`[Tint] shorts wash element present ${Boolean(document.getElementById("__tint-page-wash"))}`);
   }
 
   function clearYouTubeShortsAtmosphere() {
     document.body.classList.remove("__tint-youtube-shorts", "__tint-youtube-shorts-fallback");
     delete document.body.dataset.tintShortsAtmosphere;
+    if (!pageWashEl) return;
+    pageWashEl.classList.remove("__tint-page-wash-active", "__tint-shorts-wash");
+    delete pageWashEl.dataset.tintShortsAtmosphere;
   }
 
   function getYouTubeFeedRect(clusters) {
@@ -604,6 +625,8 @@
     document.body.classList.remove("__tint-youtube-atmosphere", "__tint-youtube-shorts", "__tint-youtube-shorts-fallback");
     delete document.body.dataset.tintShortsAtmosphere;
     if (!pageWashEl) return;
+    pageWashEl.classList.remove("__tint-page-wash-active", "__tint-shorts-wash");
+    delete pageWashEl.dataset.tintShortsAtmosphere;
     pageWashEl.style.removeProperty("--tint-page-c");
     pageWashEl.style.removeProperty("--tint-page-opacity");
     pageWashEl.style.removeProperty("--tint-page-x");

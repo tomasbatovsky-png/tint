@@ -1,0 +1,72 @@
+{
+  "version": "0.1.0",
+  "philosophy": "Tint detects observable structural and linguistic patterns. It does not assert intent. It does not call anything fake. Weights are starting heuristics, not truth. Fork and disagree.",
+  "atmospheres": {
+    "blue":   { "label": "Calm · Human",        "feeling": "This space feels human." },
+    "orange": { "label": "Attention-optimized", "feeling": "This space wants my nervous system." },
+    "red":    { "label": "Coercive pressure",   "feeling": "Something here is trying to control me." },
+    "gray":   { "label": "Synthetic sludge",    "feeling": "Nothing real exists here." }
+  },
+  "intensity_rule": "hue = atmosphere type. opacity / saturation = intensity. A page is never binary — it is a spectrum.",
+  "threshold": {
+    "min_overlay_score": 0.25,
+    "rationale": "Below 0.25 the page reads as neutral. Tint should highlight ~20% of strongest signals, not 100% of everything."
+  },
+  "signals": [
+    {
+      "id": "outrage_amplification",
+      "atmosphere": "orange",
+      "description": "Dense emotional intensifiers. Designed to activate.",
+      "patterns": [
+        "ALL-CAPS word ratio",
+        "outrage keywords (disgusting, shocking, unbelievable)",
+        "share imperatives (share this, spread the word)",
+        "exclamation density"
+      ]
+    },
+    {
+      "id": "tribal_signaling",
+      "atmosphere": "orange",
+      "description": "We/them framing. In-group identification cue.",
+      "patterns": [
+        "we/us co-occurring with they/them in close range",
+        "tribal markers (sheep, sheeple, mainstream, elites)",
+        "real/true X identity claims",
+        "pre-emptive attacks on dissenters"
+      ]
+    },
+    {
+      "id": "attention_acceleration",
+      "atmosphere": "orange",
+      "description": "Engagement cues compete for focus. Reaction becomes content.",
+      "patterns": [
+        "numeric engagement signals (upvotes, comments, views)",
+        "trending / viral cues",
+        "curiosity gap headlines (you won't believe)",
+        "reaction shaping (internet is on fire)"
+      ]
+    },
+    {
+      "id": "urgency_cascade",
+      "atmosphere": "red",
+      "description": "Stacked time-pressure cues. Panic-induction mechanism.",
+      "patterns": [
+        "live countdown (HH:MM:SS) with expiration framing",
+        "scarcity cues (only N left, limited time)",
+        "urgency imperatives (act now, before it's gone)",
+        "live viewer count manipulation"
+      ]
+    },
+    {
+      "id": "synthetic_cadence",
+      "atmosphere": "gray",
+      "description": "Filler-dense prose. Template-driven structure.",
+      "patterns": [
+        "filler phrases (in today's fast-paced world, game-changer)",
+        "SEO listicle title pattern (10 things X in 2026)",
+        "self-referential authority (comprehensive guide)",
+        "template intros (let's dive into)"
+      ]
+    }
+  ]
+}

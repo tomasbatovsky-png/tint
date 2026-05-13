@@ -466,6 +466,34 @@
     });
   }
 
+  function getYouTubeWatchRecommendationVisualContainer(card) {
+    if (!card) return null;
+
+    const visualSelectors = [
+      ":scope > #dismissible",
+      ":scope #dismissible",
+      ":scope > .yt-lockup-view-model-wiz",
+      ":scope .yt-lockup-view-model-wiz",
+      ":scope > .yt-lockup-view-model",
+      ":scope .yt-lockup-view-model"
+    ];
+
+    for (const selector of visualSelectors) {
+      try {
+        const visual = card.querySelector(selector);
+        if (visual && isVisibleYouTubeWatchRecommendationPaintTarget(visual)) return visual;
+      } catch (e) { /* selector may not match on this YouTube surface */ }
+    }
+
+    return isVisibleYouTubeWatchRecommendationPaintTarget(card) ? card : null;
+  }
+
+  function isVisibleYouTubeWatchRecommendationPaintTarget(el) {
+    if (!el || !isVisibleYouTubeWatchRecommendationNode(el)) return false;
+    const rect = el.getBoundingClientRect();
+    return rect.width >= 140 && rect.height >= 40;
+  }
+
   function getYouTubeClusterText(el) {
     const parts = [el.innerText || el.textContent || ""];
     el.querySelectorAll("[aria-label], [title], [alt]").forEach(node => {
@@ -812,6 +840,7 @@
           intensity: result.intensity,
           label: result.label,
           isYouTubeCard: true,
+          isYouTubeWatchCard: watchRecommendationsActive,
           cardEligible: false
         });
       });
@@ -875,33 +904,40 @@
     fresh.forEach((r, i) => applyMark({ ...r, cardEligible: r.cardEligible || cardEligible.has(r.el) }, i, stagger));
   }
 
-  function applyMark({ el, key, atm, intensity, label, cardEligible = false, isYouTubeCard = false, isYouTubeComment = false }, idx, stagger) {
+  function applyMark({ el, key, atm, intensity, label, cardEligible = false, isYouTubeCard = false, isYouTubeWatchCard = false, isYouTubeComment = false }, idx, stagger) {
     const rawColor = atm || window.__Tint.Signals[key]?.atm;
     const color = isYouTubePage() && rawColor === "red" ? "orange" : rawColor;
     if (!color) return;
 
-    el.classList.add("__tint-mark");
-    el.dataset.tintColor = color;
+    const paintEl = isYouTubeWatchCard
+      ? getYouTubeWatchRecommendationVisualContainer(el) || el
+      : el;
+
+    paintEl.classList.add("__tint-mark");
+    paintEl.dataset.tintColor = color;
     if (isYouTubeCard) {
-      el.classList.add("__tint-youtube-card");
-      el.dataset.tintLabel = label || YOUTUBE_MICRO_LABELS[color] || "";
+      paintEl.classList.add("__tint-youtube-card");
+      paintEl.dataset.tintLabel = label || YOUTUBE_MICRO_LABELS[color] || "";
+    }
+    if (isYouTubeWatchCard) {
+      paintEl.classList.add("__tint-youtube-watch-card");
     }
     if (isYouTubeComment) {
-      el.classList.add("__tint-youtube-comment");
+      paintEl.classList.add("__tint-youtube-comment");
       cardEligible = false;
     }
-    el.style.setProperty("--tint-i", intensity.toFixed(2));
+    paintEl.style.setProperty("--tint-i", intensity.toFixed(2));
     if (stagger) {
-      el.style.setProperty("--tint-reveal-delay", `${Math.min(idx * 60, 700)}ms`);
+      paintEl.style.setProperty("--tint-reveal-delay", `${Math.min(idx * 60, 700)}ms`);
     } else {
-      el.style.setProperty("--tint-reveal-delay", "0ms");
+      paintEl.style.setProperty("--tint-reveal-delay", "0ms");
     }
-    marked.set(el, { key, atm: color, intensity, cardEligible, isYouTubeCard, isYouTubeComment });
+    marked.set(paintEl, { key, atm: color, intensity, cardEligible, isYouTubeCard, isYouTubeWatchCard, isYouTubeComment, sourceEl: el });
   }
 
   function clearMarks() {
     marked.forEach((_, el) => {
-      el.classList.remove("__tint-mark", "__tint-youtube-card", "__tint-youtube-comment");
+      el.classList.remove("__tint-mark", "__tint-youtube-card", "__tint-youtube-watch-card", "__tint-youtube-comment");
       delete el.dataset.tintColor;
       delete el.dataset.tintLabel;
       el.style.removeProperty("--tint-i");

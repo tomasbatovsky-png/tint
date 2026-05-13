@@ -193,8 +193,33 @@
   const YOUTUBE_SHORTS_SELECTORS = [
     "ytd-reel-video-renderer",
     "ytd-shorts",
-    "ytm-shorts-lockup-view-model",
     "ytd-reel-item-renderer"
+  ];
+
+  const YOUTUBE_SHORTS_TITLE_SELECTORS = [
+    "ytd-reel-player-overlay-renderer #video-title",
+    "ytd-reel-player-overlay-renderer h1",
+    "ytd-reel-player-overlay-renderer h2",
+    "ytd-reel-player-overlay-renderer [id*=title i]",
+    "ytd-shorts-video-title-view-model",
+    "yt-formatted-string#video-title",
+    "yt-formatted-string[title]",
+    "[aria-label][role=heading]",
+    "[title]"
+  ];
+
+  const YOUTUBE_SHORTS_METADATA_SELECTORS = [
+    "ytd-reel-player-overlay-renderer",
+    "ytd-reel-player-header-renderer",
+    "ytd-reel-video-description-renderer",
+    "ytd-video-owner-renderer",
+    "ytd-channel-name",
+    "#metadata",
+    "#description",
+    "[id*=metadata i]",
+    "[class*=metadata i]",
+    "[class*=metapanel i]",
+    "[aria-label]"
   ];
 
   const REDDIT_TITLE_SELECTORS = [
@@ -310,6 +335,45 @@
     return parts.join(" ").replace(/\s+/g, " ").trim();
   }
 
+  function getElementOwnMetadataText(el) {
+    if (!el) return "";
+    const parts = [
+      el.getAttribute("aria-label") || "",
+      el.getAttribute("title") || "",
+      el.getAttribute("alt") || ""
+    ];
+    const text = (el.innerText || el.textContent || "").trim();
+    if (text) parts.push(text);
+    return parts.join(" ").replace(/\s+/g, " ").trim();
+  }
+
+  function getVisibleTextFromNode(root, maxNodes = 36) {
+    if (!root) return "";
+    const parts = [];
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
+      acceptNode(node) {
+        if (parts.length >= maxNodes) return NodeFilter.FILTER_REJECT;
+        if (node.closest("#__tint-toggle, #__tint-card, #__tint-page-wash")) return NodeFilter.FILTER_REJECT;
+        const tag = node.tagName;
+        if (["SCRIPT", "STYLE", "NOSCRIPT", "TEMPLATE", "SVG", "PATH"].includes(tag)) return NodeFilter.FILTER_REJECT;
+        const rect = node.getBoundingClientRect();
+        if (rect.width < 1 || rect.height < 1 || rect.bottom <= 0 || rect.top >= window.innerHeight) return NodeFilter.FILTER_SKIP;
+        const style = window.getComputedStyle(node);
+        if (style.visibility === "hidden" || style.display === "none" || Number(style.opacity) === 0) return NodeFilter.FILTER_REJECT;
+        const text = getElementOwnMetadataText(node);
+        if (text.length < 2) return NodeFilter.FILTER_SKIP;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+
+    while (walker.nextNode() && parts.length < maxNodes) {
+      const text = getElementOwnMetadataText(walker.currentNode);
+      if (text) parts.push(text);
+    }
+
+    return parts.join(" ").replace(/\s+/g, " ").trim();
+  }
+
   function countYouTubeTerms(text, patterns) {
     return patterns.reduce((sum, item) => {
       const re = Array.isArray(item) ? item[0] : item;
@@ -420,46 +484,107 @@
     pageWashEl.style.setProperty("--tint-page-y", `${feedRect.y}%`);
   }
 
-  function getVisibleYouTubeShortsAtmosphere() {
-    if (!isYouTubeShortsPage() && !document.querySelector("ytd-reel-video-renderer[is-active], ytd-reel-video-renderer")) return null;
+  function getVisibleYouTubeShortsAtmosphere({ debug = false } = {}) {
+    if (!isYouTubeShortsPage() && !document.querySelector("ytd-reel-video-renderer[is-active], ytd-reel-video-renderer, ytd-shorts")) return null;
 
-    const shorts = [...document.querySelectorAll(YOUTUBE_SHORTS_SELECTORS.join(","))]
-      .filter(el => {
-        const rect = el.getBoundingClientRect();
-        return rect.width >= 180 && rect.height >= 240 && rect.bottom > 0 && rect.top < window.innerHeight;
-      })
-      .sort((a, b) => {
-        const aRect = a.getBoundingClientRect();
-        const bRect = b.getBoundingClientRect();
-        return Math.abs((aRect.top + aRect.bottom) / 2 - window.innerHeight / 2) - Math.abs((bRect.top + bRect.bottom) / 2 - window.innerHeight / 2);
-      });
+    const renderers = collectVisibleYouTubeShortsRenderers();
+    if (debug) console.log(`[Tint] shorts renderers ${renderers.length}`);
 
-    if (!shorts.length) return null;
+    if (!renderers.length) {
+      if (isYouTubeShortsPage()) {
+        if (debug) {
+          console.log('[Tint] shorts active title ""');
+          console.log('[Tint] shorts active metadata "fallback fullscreen atmosphere"');
+          console.log("[Tint] shorts atmosphere orange");
+        }
+        return { atm: "orange", intensity: 0.42, opacity: 0.035, fallback: true, scores: { green: 0, blue: 0, orange: 1, gray: 0 } };
+      }
+      return null;
+    }
 
-    const text = getYouTubeClusterText(shorts[0]);
+    const active = renderers[0];
+    const title = getYouTubeShortsTitle(active);
+    const metadata = getYouTubeShortsMetadata(active);
+    const visibleText = getVisibleTextFromNode(active);
+    const text = [title, metadata, visibleText, getYouTubeClusterText(active)].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
     const result = scoreYouTubeCardAtmosphere(text) || {
       atm: "orange",
       intensity: 0.42,
       scores: { green: 0, blue: 0, orange: 0, gray: 0 }
     };
-    return { ...result, el: shorts[0] };
+
+    if (debug) {
+      console.log(`[Tint] shorts active title "${title.slice(0, 160)}"`);
+      console.log(`[Tint] shorts active metadata "${metadata.slice(0, 220)}"`);
+      console.log(`[Tint] shorts atmosphere ${result.atm}`);
+    }
+
+    return { ...result, el: active, title, metadata, text };
+  }
+
+  function collectVisibleYouTubeShortsRenderers() {
+    const seen = new Set();
+    return [...document.querySelectorAll(YOUTUBE_SHORTS_SELECTORS.join(","))]
+      .filter(el => {
+        if (seen.has(el)) return false;
+        seen.add(el);
+        const rect = el.getBoundingClientRect();
+        const area = rect.width * rect.height;
+        const intersects = rect.bottom > 0 && rect.top < window.innerHeight && rect.right > 0 && rect.left < window.innerWidth;
+        const activeAttr = el.hasAttribute("is-active") || el.getAttribute("aria-hidden") === "false" || el.matches("[active], .active, [selected]");
+        return intersects && (activeAttr || area >= 32000 || el.matches("ytd-shorts"));
+      })
+      .sort((a, b) => getYouTubeShortsRendererScore(b) - getYouTubeShortsRendererScore(a));
+  }
+
+  function getYouTubeShortsRendererScore(el) {
+    const rect = el.getBoundingClientRect();
+    const centerDistance = Math.abs((rect.top + rect.bottom) / 2 - window.innerHeight / 2);
+    const activeBoost = (el.hasAttribute("is-active") || el.matches("[active], .active, [selected]")) ? 100000 : 0;
+    const visibleHeight = Math.max(0, Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0));
+    return activeBoost + visibleHeight + Math.min(rect.width * rect.height / 1000, 2000) - centerDistance;
+  }
+
+  function getYouTubeShortsTitle(renderer) {
+    return getFirstShortsSelectorText(renderer, YOUTUBE_SHORTS_TITLE_SELECTORS, 160);
+  }
+
+  function getYouTubeShortsMetadata(renderer) {
+    return getFirstShortsSelectorText(renderer, YOUTUBE_SHORTS_METADATA_SELECTORS, 240);
+  }
+
+  function getFirstShortsSelectorText(renderer, selectors, maxLength) {
+    for (const sel of selectors) {
+      try {
+        const nodes = renderer.querySelectorAll(sel);
+        for (const node of nodes) {
+          const rect = node.getBoundingClientRect();
+          if (rect.width < 1 || rect.height < 1 || rect.bottom <= 0 || rect.top >= window.innerHeight) continue;
+          const text = getElementOwnMetadataText(node);
+          if (text.length >= 2) return text.slice(0, maxLength).trim();
+        }
+      } catch (e) { /* selector may not match on this YouTube surface */ }
+    }
+    return "";
   }
 
   function applyYouTubeShortsAtmosphere(result) {
     const atm = result.atm || "orange";
     const color = ATM_COLORS[atm].match(/\d+/g).join(", ");
-    const opacity = clamp(0.018 + result.intensity * 0.032, 0.02, 0.04);
+    const opacity = result.opacity || (result.fallback ? 0.035 : 0.06);
 
     document.body.classList.add("__tint-youtube-atmosphere", "__tint-youtube-shorts");
+    document.body.classList.toggle("__tint-youtube-shorts-fallback", Boolean(result.fallback));
     document.body.dataset.tintShortsAtmosphere = atm;
     pageWashEl.style.setProperty("--tint-page-c", color);
     pageWashEl.style.setProperty("--tint-page-opacity", opacity.toFixed(3));
+    pageWashEl.style.setProperty("--tint-page-edge-opacity", (result.fallback ? 0.035 : 0.08).toFixed(3));
     pageWashEl.style.setProperty("--tint-page-x", "50%");
     pageWashEl.style.setProperty("--tint-page-y", "50%");
   }
 
   function clearYouTubeShortsAtmosphere() {
-    document.body.classList.remove("__tint-youtube-shorts");
+    document.body.classList.remove("__tint-youtube-shorts", "__tint-youtube-shorts-fallback");
     delete document.body.dataset.tintShortsAtmosphere;
   }
 
@@ -476,13 +601,14 @@
   }
 
   function clearYouTubePageAtmosphere() {
-    document.body.classList.remove("__tint-youtube-atmosphere", "__tint-youtube-shorts");
+    document.body.classList.remove("__tint-youtube-atmosphere", "__tint-youtube-shorts", "__tint-youtube-shorts-fallback");
     delete document.body.dataset.tintShortsAtmosphere;
     if (!pageWashEl) return;
     pageWashEl.style.removeProperty("--tint-page-c");
     pageWashEl.style.removeProperty("--tint-page-opacity");
     pageWashEl.style.removeProperty("--tint-page-x");
     pageWashEl.style.removeProperty("--tint-page-y");
+    pageWashEl.style.removeProperty("--tint-page-edge-opacity");
   }
 
   function collectTopVisible(set, limit) {
@@ -505,7 +631,8 @@
     console.log("[Tint] candidates", candidates.length);
 
     if (onYouTube) {
-      const shortsActive = Boolean(getVisibleYouTubeShortsAtmosphere());
+      const shortsAtmosphere = getVisibleYouTubeShortsAtmosphere({ debug: isYouTubeShortsPage() });
+      const shortsActive = Boolean(shortsAtmosphere);
       if (shortsActive) console.log("[Tint] shorts detected");
       const cards = shortsActive ? [] : collectVisibleYouTubeThumbnailClusters(36);
       const atmospheres = { green: 0, blue: 0, orange: 0, gray: 0 };

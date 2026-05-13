@@ -111,47 +111,116 @@
    * Reddit-specific selectors first, generic fallback after.
    */
   const CANDIDATE_SELECTORS = [
-    // Reddit (new, web components emit content into slotted light DOM)
+    // Reddit (current)
+    'shreddit-post a[slot="title"]',
     'shreddit-post [slot="title"]',
+    'shreddit-post [id^="post-title"]',
+    'shreddit-post h1, shreddit-post h2, shreddit-post h3',
     'shreddit-post [slot="text-body"]',
+    'shreddit-post [data-post-click-location="title"]',
+    'shreddit-post [data-testid="post-title"]',
     'shreddit-comment [slot="comment"]',
     'shreddit-comment [slot="commentMeta"]',
+    'shreddit-comment div[id$="-comment-rtjson-content"]',
+    // Reddit (recent React views)
+    '[data-testid="post-container"] h1',
+    '[data-testid="post-container"] h2',
+    '[data-testid="post-container"] h3',
+    '[data-testid="post-container"] p',
+    '[data-testid="comment"] p',
+    '[data-click-id="body"]',
+    '[data-adclicklocation="title"]',
+    'a[data-click-id="body"]',
+    'a[data-testid="post-title"]',
     // Reddit (old)
+    '.thing.link a.title',
     '.thing .title a.title',
     '.thing .usertext-body .md',
     '.commentarea .usertext-body .md',
+    '.sitetable .thing .entry > .title',
     // Generic
     'article h1', 'article h2', 'article h3',
     'article p',
     'main h1', 'main h2',
     'main p',
     'blockquote',
+    '[role="article"] h1', '[role="article"] h2', '[role="article"] h3',
     '[role="article"] p'
   ];
 
-  function collectCandidates() {
-    const set = new Set();
-    for (const sel of CANDIDATE_SELECTORS) {
+  const REDDIT_TITLE_SELECTORS = [
+    'shreddit-post a[slot="title"]',
+    'shreddit-post [slot="title"]',
+    'shreddit-post [id^="post-title"]',
+    'shreddit-post h1, shreddit-post h2, shreddit-post h3',
+    'shreddit-post [data-post-click-location="title"]',
+    'shreddit-post [data-testid="post-title"]',
+    '[data-testid="post-container"] h1',
+    '[data-testid="post-container"] h2',
+    '[data-testid="post-container"] h3',
+    '[data-adclicklocation="title"]',
+    'a[data-click-id="body"]',
+    'a[data-testid="post-title"]',
+    '.thing.link a.title',
+    '.thing .title a.title',
+    '.sitetable .thing .entry > .title'
+  ];
+
+  function isRedditPage() {
+    return /(^|\.)reddit\.com$/i.test(window.location.hostname);
+  }
+
+  function hasUsableText(el, minLength = 8) {
+    const text = (el.innerText || el.textContent || "").trim();
+    return text.length >= minLength && text.length <= 6000;
+  }
+
+  function isVisibleCandidate(el) {
+    if (el.closest("#__tint-toggle, #__tint-card")) return false;
+    if (el.classList.contains("__tint-mark")) return false;
+    const rect = el.getBoundingClientRect();
+    if (rect.width < 60 || rect.height < 12) return false;
+    if (rect.bottom <= 0 || rect.top >= window.innerHeight + 2400) return false;
+    return hasUsableText(el);
+  }
+
+  function addSelectorMatches(selectors, set) {
+    for (const sel of selectors) {
       try {
         document.querySelectorAll(sel).forEach(el => {
-          if (el.closest("#__tint-toggle, #__tint-card")) return;
-          if (el.classList.contains("__tint-mark")) return;
-          const rect = el.getBoundingClientRect();
-          if (rect.width < 60 || rect.height < 12) return;
-          set.add(el);
+          if (isVisibleCandidate(el)) set.add(el);
         });
       } catch (e) { /* selector may not match on this site */ }
     }
+  }
+
+  function collectCandidates() {
+    const set = new Set();
+    addSelectorMatches(CANDIDATE_SELECTORS, set);
     // Prefer leaves: drop elements that contain other collected elements
     const arr = [...set];
     const leaves = arr.filter(el => !arr.some(other => other !== el && el.contains(other)));
     return leaves;
   }
 
+  function collectTopVisibleRedditTitles(limit = 8) {
+    const set = new Set();
+    addSelectorMatches(REDDIT_TITLE_SELECTORS, set);
+    return [...set]
+      .filter(el => {
+        const rect = el.getBoundingClientRect();
+        return rect.bottom > 0 && rect.top < window.innerHeight;
+      })
+      .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
+      .slice(0, limit);
+  }
+
   /* ===== Analyze + apply ===== */
   function analyzeAndApply(stagger = true) {
     const candidates = collectCandidates();
     const fresh = [];
+
+    console.log("[Tint] candidates", candidates.length);
 
     for (const el of candidates) {
       const text = (el.innerText || el.textContent || "").trim();
@@ -162,6 +231,18 @@
 
       fresh.push({ el, ...result });
     }
+
+    if (fresh.length === 0 && isRedditPage()) {
+      collectTopVisibleRedditTitles().forEach(el => {
+        fresh.push({
+          el,
+          key: "attention_acceleration",
+          intensity: 0.18
+        });
+      });
+    }
+
+    console.log("[Tint] marked", fresh.length);
 
     // Sort by document position for top-to-bottom reveal wave
     fresh.sort((a, b) => {

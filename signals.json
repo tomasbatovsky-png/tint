@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "philosophy": "Tint detects observable structural and linguistic patterns. It does not assert intent. It does not call anything fake. Weights are starting heuristics, not truth. Fork and disagree.",
+  "philosophy": "Tint detects observable structural and linguistic patterns. It does not assert intent. Weights are starting heuristics, not truth. Fork and disagree.",
   "atmospheres": {
     "blue":   { "label": "Calm · Human",        "feeling": "This space feels human." },
     "orange": { "label": "Attention-optimized", "feeling": "This space wants my nervous system." },
@@ -9,8 +9,8 @@
   },
   "intensity_rule": "hue = atmosphere type. opacity / saturation = intensity. A page is never binary — it is a spectrum.",
   "threshold": {
-    "min_overlay_score": 0.25,
-    "rationale": "Below 0.25 the page reads as neutral. Tint should highlight ~20% of strongest signals, not 100% of everything."
+    "min_overlay_score": 0.12,
+    "rationale": "Below 0.12 the page reads as neutral. Tint should remain subtle while still surfacing ambient patterns on real pages."
   },
   "signals": [
     {

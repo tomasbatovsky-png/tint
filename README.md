@@ -5,8 +5,8 @@
 
 Tint is a perceptual layer for the internet. It detects observable structural
 and linguistic patterns on web pages and visualizes them as subtle atmospheric
-overlays. It does **not** assert truth, intent, or ideology — it observes
-patterns.
+overlays. Tint maps nervous-system effect, not morality. It does **not** assert
+truth, intent, or ideology — it observes patterns.
 
 All analysis runs locally in your browser. No content is sent to any server.
 No API calls. No AI.
@@ -28,19 +28,27 @@ The toggle state persists across page loads and tabs (via `chrome.storage.local`
 
 ## What you'll see
 
-When Tint is **on**, certain text blocks will gain a soft atmospheric overlay:
+When Tint is **on**, certain text blocks and supported feed cards gain a soft
+atmospheric overlay:
 
-| Color  | Atmosphere               | Feeling                                |
-|--------|--------------------------|----------------------------------------|
-| Blue   | Calm · Human             | "This space feels human."              |
-| Orange | Attention-optimized      | "This space wants my nervous system."  |
-| Red    | Coercive pressure        | "Something here is trying to control me." |
-| Gray   | Synthetic sludge         | "Nothing real exists here."            |
+| Color  | Atmosphere                                   | Nervous-system reading                         |
+|--------|----------------------------------------------|------------------------------------------------|
+| Green  | Grounded / restorative / human-paced          | "This space may invite slower attention."      |
+| Blue   | Neutral / informational / functional          | "This space may be primarily practical."       |
+| Orange | Attention-active / stimulation-heavy / pressure | "This space may ask for more activation."    |
+| Gray   | Synthetic / AI-sludge / templated / low-density | "This space may feel generic or automated."  |
 
-Hue tells you the atmosphere type. Opacity tells you intensity.
+Hue tells you the atmosphere type. Opacity tells you intensity. Green is not a
+claim that something is "good"; orange is not a claim that something is "bad."
+Tint maps nervous-system effect, not morality.
 
-Click any tinted block to see a small reason card explaining which signal
-fired and why.
+On YouTube, Tint behaves as a subtle atmosphere layer around video cards and
+thumbnail clusters. Hovering a tinted video card reveals a tiny micro-label such
+as `grounded pace`, `neutral info`, `attention-heavy`, or `synthetic rhythm`.
+Comment reason cards are temporarily suppressed on YouTube to keep the effect
+ambient; comment analysis remains local and minimal. On other supported text
+blocks, clicking a stronger tint may show a small reason card explaining which
+signal fired and why.
 
 ---
 
@@ -53,6 +61,11 @@ fired and why.
 | attention acceleration   | orange     | engagement metrics, curiosity gap headlines      |
 | urgency cascade          | red        | live countdowns, scarcity cues, urgency imperatives |
 | synthetic cadence        | gray       | SEO templates, filler phrases, listicle titles   |
+
+YouTube video cards add a local card-level atmosphere pass using the visible
+title, metadata, badges such as LIVE / premiere / sponsored, and available
+thumbnail alt / aria text. That pass maps to green, blue, orange, or gray and
+does not use red for page-level or thumbnail atmosphere.
 
 Each signal is a small JavaScript function in `signals.js`. The thresholds and
 patterns are open and forkable.
@@ -76,6 +89,7 @@ tint-extension/
 ## Site coverage (v0.1)
 
 - `reddit.com`, `www.reddit.com`, `new.reddit.com`, `old.reddit.com`
+- `youtube.com`, `www.youtube.com`
 
 Other sites can be added by editing `manifest.json` → `content_scripts.matches`.
 
@@ -101,7 +115,7 @@ Tint is not a truth engine. Tint is not a scam detector. Tint is not a
 political filter.
 
 Tint is a perceptual instrument. Browsers render HTML. Tint renders
-atmosphere.
+atmosphere. Tint maps nervous-system effect, not morality.
 
 The user remains in charge. We show patterns. They decide what to do.
 

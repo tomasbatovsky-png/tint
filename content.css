@@ -9,6 +9,7 @@
  */
 
 :root {
+  --tint-green:  82, 146, 105;
   --tint-blue:   118, 162, 196;
   --tint-orange: 224, 148, 86;
   --tint-red:    178, 80, 76;
@@ -154,6 +155,7 @@ body.__tint-on .__tint-mark:hover::before {
   transition-delay: 0ms !important;
 }
 
+.__tint-mark[data-tint-color="green"]  { --tint-c: var(--tint-green); }
 .__tint-mark[data-tint-color="blue"]   { --tint-c: var(--tint-blue); }
 .__tint-mark[data-tint-color="orange"] { --tint-c: var(--tint-orange); }
 .__tint-mark[data-tint-color="red"]    { --tint-c: var(--tint-red); }
@@ -163,6 +165,67 @@ body.__tint-on .__tint-mark:hover::before {
 .__tint-mark > * {
   position: relative !important;
   z-index: 1 !important;
+}
+
+/* ============================================================
+ * YOUTUBE VIDEO CARD ATMOSPHERE
+ * Low-opacity thumbnail/card cluster tint with tiny hover labels.
+ * ============================================================ */
+body.__tint-on .__tint-youtube-card {
+  cursor: inherit !important;
+}
+
+body.__tint-on .__tint-youtube-card::before {
+  inset: -4px -5px !important;
+  border-radius: 16px !important;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(var(--tint-c), clamp(0.04, calc(var(--tint-i, 0.5) * 0.12), 0.09)) 0%,
+    rgba(var(--tint-c), clamp(0.02, calc(var(--tint-i, 0.5) * 0.07), 0.055)) 48%,
+    rgba(var(--tint-c), 0) 100%
+  ) !important;
+  mix-blend-mode: multiply !important;
+}
+
+body.__tint-on .__tint-youtube-card:hover::before {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(var(--tint-c), clamp(0.06, calc(var(--tint-i, 0.5) * 0.18), 0.12)) 0%,
+    rgba(var(--tint-c), clamp(0.03, calc(var(--tint-i, 0.5) * 0.095), 0.075)) 50%,
+    rgba(var(--tint-c), 0) 100%
+  ) !important;
+}
+
+body.__tint-on .__tint-youtube-card::after {
+  content: attr(data-tint-label) !important;
+  position: absolute !important;
+  top: 6px !important;
+  left: 8px !important;
+  z-index: 2 !important;
+  max-width: calc(100% - 16px) !important;
+  padding: 2px 6px !important;
+  border-radius: 999px !important;
+  background: rgba(18, 18, 18, 0.46) !important;
+  color: rgba(255, 255, 255, 0.82) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  backdrop-filter: blur(8px) !important;
+  font-family: -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", system-ui, sans-serif !important;
+  font-size: 9px !important;
+  line-height: 1.35 !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.02em !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  opacity: 0 !important;
+  transform: translateY(-2px) !important;
+  transition: opacity 160ms ease, transform 160ms ease !important;
+  pointer-events: none !important;
+}
+
+body.__tint-on .__tint-youtube-card:hover::after {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
 }
 
 /* ============================================================
@@ -247,23 +310,47 @@ body.__tint-on .__tint-mark:hover::before {
  * YOUTUBE COMMENT EDGE GLOW
  * A quiet left-edge presence for tinted comments, not a border or box.
  * ============================================================ */
+body.__tint-on ytd-comment-thread-renderer .__tint-mark::before,
+body.__tint-on ytd-comment-view-model .__tint-mark::before,
+body.__tint-on ytd-comment-renderer .__tint-mark::before {
+  inset: -2px -4px !important;
+  border-radius: 8px !important;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.035)) 0%,
+    rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.018)) 52%,
+    rgba(var(--tint-c), 0) 100%
+  ) !important;
+}
+
+body.__tint-on ytd-comment-thread-renderer .__tint-mark:hover::before,
+body.__tint-on ytd-comment-view-model .__tint-mark:hover::before,
+body.__tint-on ytd-comment-renderer .__tint-mark:hover::before {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.05)) 0%,
+    rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.025)) 52%,
+    rgba(var(--tint-c), 0) 100%
+  ) !important;
+}
+
 body.__tint-on ytd-comment-thread-renderer .__tint-mark::after,
 body.__tint-on ytd-comment-view-model .__tint-mark::after,
 body.__tint-on ytd-comment-renderer .__tint-mark::after {
   content: "" !important;
   position: absolute !important;
-  top: -6px !important;
-  bottom: -6px !important;
-  left: -13px !important;
-  width: 2px !important;
+  top: -3px !important;
+  bottom: -3px !important;
+  left: -9px !important;
+  width: 1px !important;
   border-radius: 999px !important;
   background: linear-gradient(
     to bottom,
     rgba(var(--tint-c), 0),
-    rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.22)),
+    rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.12)),
     rgba(var(--tint-c), 0)
   ) !important;
-  box-shadow: 0 0 14px rgba(var(--tint-c), calc(var(--tint-i, 0.5) * 0.16)) !important;
-  opacity: 0.78 !important;
+  box-shadow: none !important;
+  opacity: 0.55 !important;
   pointer-events: none !important;
 }

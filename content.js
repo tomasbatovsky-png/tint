@@ -138,6 +138,15 @@
     '.thing .usertext-body .md',
     '.commentarea .usertext-body .md',
     '.sitetable .thing .entry > .title',
+    // YouTube
+    'ytd-comment-thread-renderer #content-text',
+    'ytd-comment-view-model #content-text',
+    'ytd-comment-renderer #content-text',
+    '#content-text',
+    'yt-formatted-string#content-text',
+    'ytd-video-primary-info-renderer h1',
+    'h1.title',
+    'ytd-watch-metadata h1',
     // Generic
     'article h1', 'article h2', 'article h3',
     'article p',
@@ -146,6 +155,14 @@
     'blockquote',
     '[role="article"] h1', '[role="article"] h2', '[role="article"] h3',
     '[role="article"] p'
+  ];
+
+  const YOUTUBE_COMMENT_SELECTORS = [
+    'ytd-comment-thread-renderer #content-text',
+    'ytd-comment-view-model #content-text',
+    'ytd-comment-renderer #content-text',
+    'yt-formatted-string#content-text',
+    '#content-text'
   ];
 
   const REDDIT_TITLE_SELECTORS = [
@@ -168,6 +185,10 @@
 
   function isRedditPage() {
     return /(^|\.)reddit\.com$/i.test(window.location.hostname);
+  }
+
+  function isYouTubePage() {
+    return /(^|\.)youtube\.com$/i.test(window.location.hostname);
   }
 
   function hasUsableText(el, minLength = 8) {
@@ -206,6 +227,19 @@
   function collectTopVisibleRedditTitles(limit = 8) {
     const set = new Set();
     addSelectorMatches(REDDIT_TITLE_SELECTORS, set);
+    return collectTopVisible(set, limit);
+  }
+
+  function collectTopVisibleYouTubeComments(limit = 8) {
+    const set = new Set();
+    addSelectorMatches(YOUTUBE_COMMENT_SELECTORS, set);
+    const comments = new Set(
+      [...set].filter(el => el.closest("ytd-comment-thread-renderer, ytd-comment-view-model, ytd-comment-renderer"))
+    );
+    return collectTopVisible(comments, limit);
+  }
+
+  function collectTopVisible(set, limit) {
     return [...set]
       .filter(el => {
         const rect = el.getBoundingClientRect();
@@ -219,7 +253,9 @@
   function analyzeAndApply(stagger = true) {
     const candidates = collectCandidates();
     const fresh = [];
+    const onYouTube = isYouTubePage();
 
+    if (onYouTube) console.log("[Tint] site youtube");
     console.log("[Tint] candidates", candidates.length);
 
     for (const el of candidates) {
@@ -234,6 +270,16 @@
 
     if (fresh.length === 0 && isRedditPage()) {
       collectTopVisibleRedditTitles().forEach(el => {
+        fresh.push({
+          el,
+          key: "attention_acceleration",
+          intensity: 0.18
+        });
+      });
+    }
+
+    if (fresh.length === 0 && onYouTube) {
+      collectTopVisibleYouTubeComments().forEach(el => {
         fresh.push({
           el,
           key: "attention_acceleration",

@@ -202,12 +202,34 @@
 
   const YOUTUBE_WATCH_RECOMMENDATION_SELECTORS = [
     "ytd-compact-video-renderer",
+    "ytd-rich-item-renderer",
+    "ytd-video-renderer",
+    "ytd-grid-video-renderer",
+    "ytd-item-section-renderer",
+    "#related ytd-compact-video-renderer",
+    "#secondary ytd-compact-video-renderer",
+    "#secondary-inner ytd-compact-video-renderer",
+    "ytd-watch-next-secondary-results-renderer *",
+    "a#thumbnail",
+    "#video-title",
+    "yt-formatted-string#video-title",
+    // Keep legacy non-video recommendation renderer support.
+    "ytd-compact-radio-renderer",
+    "ytd-compact-playlist-renderer"
+  ];
+
+  const YOUTUBE_WATCH_RECOMMENDATION_CONTAINERS = [
+    "ytd-compact-video-renderer",
+    "ytd-rich-item-renderer",
+    "ytd-video-renderer",
+    "ytd-grid-video-renderer",
     "ytd-compact-radio-renderer",
     "ytd-compact-playlist-renderer",
-    "ytd-watch-next-secondary-results-renderer ytd-compact-video-renderer",
-    "#secondary ytd-compact-video-renderer",
-    "#related ytd-compact-video-renderer"
+    "yt-lockup-view-model",
+    "ytd-item-section-renderer"
   ];
+
+  let lastYouTubeWatchRecommendationDebug = { rawNodes: 0, filteredCards: 0 };
 
   const YOUTUBE_SHORTS_SELECTORS = [
     "ytd-reel-video-renderer",
@@ -340,16 +362,24 @@
   }
 
   function collectVisibleYouTubeWatchRecommendationCards(limit = 36) {
+    const rawNodes = new Set();
     const cards = new Set();
 
     for (const sel of YOUTUBE_WATCH_RECOMMENDATION_SELECTORS) {
-      document.querySelectorAll(sel).forEach(el => {
-        const card = el.closest("ytd-compact-video-renderer, ytd-compact-radio-renderer, ytd-compact-playlist-renderer") || el;
-        if (isVisibleYouTubeWatchRecommendationCard(card)) cards.add(card);
-      });
+      try {
+        document.querySelectorAll(sel).forEach(el => {
+          rawNodes.add(el);
+          const card = findNearestVisibleYouTubeWatchRecommendationContainer(el);
+          if (card) cards.add(card);
+        });
+      } catch (e) { /* selector may not match on this YouTube surface */ }
     }
 
-    return sortYouTubeCardsByScreenPosition([...cards]).slice(0, limit);
+    const filtered = dedupeNestedYouTubeWatchRecommendationCards([...cards])
+      .filter(isVisibleYouTubeWatchRecommendationCard);
+    const sorted = sortYouTubeCardsByScreenPosition(filtered).slice(0, limit);
+    lastYouTubeWatchRecommendationDebug = { rawNodes: rawNodes.size, filteredCards: sorted.length };
+    return sorted;
   }
 
   function isVisibleYouTubeThumbnailCluster(el) {
@@ -363,18 +393,69 @@
     return isVisible && thumbVisible;
   }
 
+  function findNearestVisibleYouTubeWatchRecommendationContainer(el) {
+    if (!el || !isVisibleYouTubeWatchRecommendationNode(el)) return null;
+    if (!el.closest("ytd-watch-next-secondary-results-renderer, #secondary-inner, #secondary, #related")) return null;
+
+    const containerSelector = YOUTUBE_WATCH_RECOMMENDATION_CONTAINERS.join(",");
+    let card = el.closest(containerSelector);
+
+    if (card && card.matches("ytd-item-section-renderer")) {
+      const childCard = [...card.querySelectorAll(containerSelector)]
+        .find(child => child !== card && isVisibleYouTubeWatchRecommendationCard(child));
+      if (childCard) card = childCard;
+    }
+
+    if (card && isVisibleYouTubeWatchRecommendationCard(card)) return card;
+    return null;
+  }
+
+  function dedupeNestedYouTubeWatchRecommendationCards(cards) {
+    return cards.filter(card => {
+      return !cards.some(other => {
+        if (other === card || !card.contains(other)) return false;
+        return getYouTubeRecommendationContainerRank(other) <= getYouTubeRecommendationContainerRank(card);
+      });
+    });
+  }
+
+  function getYouTubeRecommendationContainerRank(el) {
+    if (!el) return 99;
+    if (el.matches("ytd-compact-video-renderer, ytd-video-renderer, ytd-grid-video-renderer, ytd-rich-item-renderer, ytd-compact-radio-renderer, ytd-compact-playlist-renderer, yt-lockup-view-model")) return 1;
+    if (el.matches("ytd-item-section-renderer")) return 2;
+    return 3;
+  }
+
+  function isVisibleYouTubeWatchRecommendationNode(el) {
+    if (!el || el.closest("template, script, style, noscript, #__tint-toggle, #__tint-card, #__tint-page-wash")) return false;
+    const rect = el.getBoundingClientRect();
+    if (rect.width < 1 || rect.height < 1) return false;
+    if (rect.bottom <= 0 || rect.top >= window.innerHeight + 1200 || rect.right <= 0 || rect.left >= window.innerWidth) return false;
+
+    for (let node = el; node && node.nodeType === Node.ELEMENT_NODE; node = node.parentElement) {
+      if (node.tagName === "TEMPLATE") return false;
+      const style = window.getComputedStyle(node);
+      if (style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0) return false;
+      if (node.matches("ytd-watch-next-secondary-results-renderer, #secondary-inner, #secondary, #related, body")) break;
+    }
+
+    return true;
+  }
+
   function isVisibleYouTubeWatchRecommendationCard(el) {
-    if (!el || !el.matches("ytd-compact-video-renderer, ytd-compact-radio-renderer, ytd-compact-playlist-renderer")) return false;
-    if (!el.closest("ytd-watch-next-secondary-results-renderer, #secondary, #related")) return false;
+    if (!el || !el.matches(YOUTUBE_WATCH_RECOMMENDATION_CONTAINERS.join(","))) return false;
+    if (!el.closest("ytd-watch-next-secondary-results-renderer, #secondary-inner, #secondary, #related")) return false;
+    if (!isVisibleYouTubeWatchRecommendationNode(el)) return false;
 
     const thumb = el.querySelector("#thumbnail, a#thumbnail, ytd-thumbnail, yt-thumbnail-view-model, .yt-thumbnail-view-model");
+    const title = el.querySelector("#video-title, yt-formatted-string#video-title, [aria-label], [title]");
     const rect = el.getBoundingClientRect();
     const thumbRect = thumb ? thumb.getBoundingClientRect() : null;
-    const isVisible = rect.bottom > 0 && rect.top < window.innerHeight + 900 && rect.right > 0 && rect.left < window.innerWidth;
-    const cardSized = rect.width >= 220 && rect.height >= 56;
-    const thumbVisible = thumbRect ? thumbRect.width >= 72 && thumbRect.height >= 40 : true;
+    const isVisible = rect.bottom > 0 && rect.top < window.innerHeight + 1200 && rect.right > 0 && rect.left < window.innerWidth;
+    const cardSized = rect.width >= 140 && rect.height >= 40;
+    const thumbVisible = thumbRect ? thumbRect.width >= 48 && thumbRect.height >= 27 && isVisibleYouTubeWatchRecommendationNode(thumb) : true;
 
-    return isVisible && cardSized && thumbVisible && hasUsableText(el, 4);
+    return isVisible && cardSized && thumbVisible && (hasUsableText(el, 4) || Boolean(title));
   }
 
   function sortYouTubeCardsByScreenPosition(cards) {
@@ -736,6 +817,8 @@
       });
 
       if (watchRecommendationsActive) {
+        console.log(`[Tint] watch raw nodes ${lastYouTubeWatchRecommendationDebug.rawNodes}`);
+        console.log(`[Tint] watch filtered cards ${lastYouTubeWatchRecommendationDebug.filteredCards}`);
         console.log(`[Tint] youtube watch recommendations ${cards.length}`);
         console.log("[Tint] youtube watch atmospheres", atmospheres);
       } else {

@@ -360,21 +360,24 @@ body.__tint-on ytd-comment-renderer .__tint-mark::after {
  * Fullscreen psychological weather: ambient wash and edge glow only.
  * ============================================================ */
 body.__tint-on.__tint-youtube-shorts #__tint-page-wash {
-  inset: -18vh -16vw !important;
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 2147483645 !important;
+  pointer-events: none !important;
   background:
     radial-gradient(
       ellipse 72vw 78vh at 50% 50%,
-      rgba(var(--tint-page-c, var(--tint-orange)), var(--tint-page-opacity, 0.032)) 0%,
-      rgba(var(--tint-page-c, var(--tint-orange)), calc(var(--tint-page-opacity, 0.032) * 0.56)) 42%,
-      rgba(var(--tint-page-c, var(--tint-orange)), calc(var(--tint-page-opacity, 0.032) * 0.18)) 70%,
+      rgba(var(--tint-page-c, var(--tint-orange)), var(--tint-page-opacity, 0.10)) 0%,
+      rgba(var(--tint-page-c, var(--tint-orange)), calc(var(--tint-page-opacity, 0.10) * 0.56)) 42%,
+      rgba(var(--tint-page-c, var(--tint-orange)), calc(var(--tint-page-opacity, 0.10) * 0.18)) 70%,
       rgba(var(--tint-page-c, var(--tint-orange)), 0) 100%
     ),
     linear-gradient(
       90deg,
-      rgba(var(--tint-page-c, var(--tint-orange)), var(--tint-page-edge-opacity, 0.08)),
+      rgba(var(--tint-page-c, var(--tint-orange)), var(--tint-page-edge-opacity, 0.14)),
       rgba(var(--tint-page-c, var(--tint-orange)), 0) 15%,
       rgba(var(--tint-page-c, var(--tint-orange)), 0) 85%,
-      rgba(var(--tint-page-c, var(--tint-orange)), var(--tint-page-edge-opacity, 0.08))
+      rgba(var(--tint-page-c, var(--tint-orange)), var(--tint-page-edge-opacity, 0.14))
     ) !important;
   filter: blur(26px) saturate(104%) !important;
 }
@@ -384,17 +387,17 @@ body.__tint-on.__tint-youtube-shorts.__tint-youtube-shorts-fallback #__tint-page
   background:
     linear-gradient(
       90deg,
-      rgba(var(--tint-page-c, var(--tint-orange)), var(--tint-page-opacity, 0.035)),
+      rgba(var(--tint-page-c, var(--tint-orange)), var(--tint-page-opacity, 0.10)),
       rgba(var(--tint-page-c, var(--tint-orange)), 0) 17%,
       rgba(var(--tint-page-c, var(--tint-orange)), 0) 83%,
-      rgba(var(--tint-page-c, var(--tint-orange)), var(--tint-page-opacity, 0.035))
+      rgba(var(--tint-page-c, var(--tint-orange)), var(--tint-page-opacity, 0.10))
     ),
     linear-gradient(
       180deg,
-      rgba(var(--tint-page-c, var(--tint-orange)), calc(var(--tint-page-opacity, 0.035) * 0.62)),
+      rgba(var(--tint-page-c, var(--tint-orange)), calc(var(--tint-page-opacity, 0.10) * 0.62)),
       rgba(var(--tint-page-c, var(--tint-orange)), 0) 18%,
       rgba(var(--tint-page-c, var(--tint-orange)), 0) 82%,
-      rgba(var(--tint-page-c, var(--tint-orange)), calc(var(--tint-page-opacity, 0.035) * 0.62))
+      rgba(var(--tint-page-c, var(--tint-orange)), calc(var(--tint-page-opacity, 0.10) * 0.62))
     ) !important;
   filter: blur(32px) saturate(103%) !important;
 }

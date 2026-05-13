@@ -469,6 +469,10 @@
   function getYouTubeWatchRecommendationVisualContainer(card) {
     if (!card) return null;
 
+    if (card.matches("ytd-compact-video-renderer, ytd-compact-radio-renderer, ytd-compact-playlist-renderer")) {
+      return isVisibleYouTubeWatchRecommendationPaintTarget(card) ? card : null;
+    }
+
     const visualSelectors = [
       ":scope > #dismissible",
       ":scope #dismissible",

@@ -51,7 +51,10 @@
   let cardEl = null;
   let pageWashEl = null;
 
-  /* ===== Toggle ===== */
+  /* ============================================================
+   * CORE UI / TOGGLE LIFECYCLE
+   * Owns the floating Tint switch, persisted enabled state, and enable/disable entrypoint.
+   * ============================================================ */
   function createToggle() {
     toggleEl = document.createElement("button");
     toggleEl.id = "__tint-toggle";
@@ -72,7 +75,10 @@
     document.body.appendChild(toggleEl);
   }
 
-  /* ===== Reason card ===== */
+  /* ============================================================
+   * EXPLANATION UI / REASON CARD
+   * Owns the optional floating explanation card for eligible marked elements.
+   * ============================================================ */
   function createCard() {
     cardEl = document.createElement("div");
     cardEl.id = "__tint-card";
@@ -88,6 +94,11 @@
     document.body.appendChild(cardEl);
   }
 
+  /* ============================================================
+   * PAGE WASH LIFECYCLE
+   * Shared visual primitive used only by explicit ambient owners such as
+   * YouTube logo preview and Shorts. Keep activation/cleanup isolated.
+   * ============================================================ */
   function ensurePageWash() {
     if (pageWashEl && pageWashEl.isConnected) return pageWashEl;
 
@@ -140,6 +151,12 @@
   function hideCard() {
     if (cardEl) cardEl.classList.remove("show");
   }
+
+  /* ============================================================
+   * CANDIDATE DISCOVERY / ADAPTER ENTRYPOINTS
+   * Collects text-bearing candidates. Platform-specific ownership should
+   * stay explicit so generic scanning does not override YouTube or Reddit.
+   * ============================================================ */
 
   /* ===== Candidate selection =====
    * Strategy: pick text-bearing leaf-ish containers.
@@ -278,6 +295,10 @@
     '.sitetable .thing .entry > .title'
   ];
 
+  /* ============================================================
+   * PLATFORM DETECTION
+   * Routes behavior into Reddit, YouTube, Shorts, watch, and search surfaces.
+   * ============================================================ */
   function isRedditPage() {
     return /(^|\.)reddit\.com$/i.test(window.location.hostname);
   }
@@ -556,6 +577,11 @@
     return { atm, intensity, label: YOUTUBE_MICRO_LABELS[atm], scores };
   }
 
+  /* ============================================================
+   * YOUTUBE SCORING
+   * Local heuristic scoring for YouTube cards and recommendations.
+   * Do not mix cleanup/refactor work with scoring changes.
+   * ============================================================ */
   function scoreYouTubeCardAtmosphere(text) {
     const scores = {
       green: countYouTubeTerms(text, [
@@ -927,6 +953,11 @@
     marked.set(paintEl, { key, atm: color, intensity, cardEligible, isYouTubeCard, isYouTubeWatchCard, isYouTubeComment, sourceEl: el });
   }
 
+  /* ============================================================
+   * CLEANUP / RESET PATHS
+   * Removes Tint-owned classes, state, timers, and visual overlays.
+   * This section is critical for preventing page-wash or hover leakage.
+   * ============================================================ */
   function clearMarks() {
     marked.forEach((_, el) => {
       el.classList.remove("__tint-mark", "__tint-youtube-card", "__tint-youtube-comment");
@@ -960,6 +991,10 @@
   }
 
   /* ===== Enable / disable ===== */
+  /* ============================================================
+   * EXTENSION ENABLE / DISABLE LIFECYCLE
+   * Main runtime entry and exit path for Tint.
+   * ============================================================ */
   function enableTint() {
     document.body.classList.add("__tint-on");
     // Slight delay to let CSS pick up the class transition

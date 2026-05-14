@@ -230,6 +230,7 @@
   ];
 
   let lastYouTubeWatchRecommendationDebug = { rawNodes: 0, filteredCards: 0 };
+  let lastYouTubeWatchCardClassDebug = { count: 0, firstRect: null };
 
   const YOUTUBE_SHORTS_SELECTORS = [
     "ytd-reel-video-renderer",
@@ -948,7 +949,13 @@
       return (pos & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1;
     });
 
+    lastYouTubeWatchCardClassDebug = { count: 0, firstRect: null };
     fresh.forEach((r, i) => applyMark({ ...r, cardEligible: r.cardEligible || cardEligible.has(r.el) }, i, stagger));
+
+    if (onYouTube && isYouTubeWatchPage()) {
+      console.log(`[Tint] watch card class applied ${lastYouTubeWatchCardClassDebug.count}`);
+      console.log("[Tint] watch card first rect", lastYouTubeWatchCardClassDebug.firstRect || { width: 0, height: 0 });
+    }
   }
 
   function applyMark({ el, key, atm, intensity, label, cardEligible = false, isYouTubeCard = false, isYouTubeWatchCard = false, isYouTubeComment = false }, idx, stagger) {
@@ -968,6 +975,16 @@
     }
     if (isYouTubeWatchCard) {
       paintEl.classList.add("__tint-youtube-watch-card");
+      if (isYouTubeWatchRecommendationPaintTarget(paintEl)) {
+        const rect = paintEl.getBoundingClientRect();
+        lastYouTubeWatchCardClassDebug.count += 1;
+        if (!lastYouTubeWatchCardClassDebug.firstRect) {
+          lastYouTubeWatchCardClassDebug.firstRect = {
+            width: Math.round(rect.width),
+            height: Math.round(rect.height)
+          };
+        }
+      }
     }
     if (isYouTubeComment) {
       paintEl.classList.add("__tint-youtube-comment");

@@ -114,8 +114,8 @@
   mix-blend-mode: multiply !important;
 }
 
-body.__tint-on.__tint-youtube-logo-preview #__tint-page-wash,
-body.__tint-on.__tint-youtube-shorts #__tint-page-wash {
+body.__tint-on.__tint-youtube-logo-preview #__tint-page-wash.__tint-page-wash-logo-preview,
+body.__tint-on.__tint-youtube-shorts #__tint-page-wash.__tint-page-wash-shorts {
   opacity: 1 !important;
 }
 

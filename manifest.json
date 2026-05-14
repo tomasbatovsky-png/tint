@@ -12,7 +12,8 @@
         "https://reddit.com/*",
         "https://new.reddit.com/*",
         "https://www.youtube.com/*",
-        "https://youtube.com/*"
+        "https://youtube.com/*",
+        "https://*.youtube.com/*"
       ],
       "js": ["signals.js", "content.js"],
       "css": ["content.css"],

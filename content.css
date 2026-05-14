@@ -228,65 +228,44 @@ body.__tint-on .__tint-youtube-card:hover::after {
 }
 
 
-/* YouTube watch recommendations: paint the visible compact renderer surface. */
-body.__tint-on ytd-compact-video-renderer.__tint-youtube-watch-card,
-body.__tint-on ytd-compact-radio-renderer.__tint-youtube-watch-card,
-body.__tint-on ytd-compact-playlist-renderer.__tint-youtube-watch-card {
+/* YouTube watch recommendations: temporary debug visibility on the outer visible compact renderer. */
+body.__tint-on .__tint-youtube-watch-card {
   position: relative !important;
   isolation: isolate !important;
   overflow: visible !important;
   border: 0 !important;
   box-shadow: none !important;
+  cursor: inherit !important;
 }
 
-body.__tint-on ytd-compact-video-renderer.__tint-youtube-watch-card::before,
-body.__tint-on ytd-compact-radio-renderer.__tint-youtube-watch-card::before,
-body.__tint-on ytd-compact-playlist-renderer.__tint-youtube-watch-card::before {
+body.__tint-on .__tint-youtube-watch-card::before {
   content: "" !important;
   position: absolute !important;
-  inset: 0 !important;
-  z-index: 2 !important;
-  border-radius: 14px !important;
-  opacity: 0.18 !important;
+  inset: -4px -6px !important;
+  z-index: 1 !important;
+  border-radius: 16px !important;
+  opacity: 0.35 !important;
   background: radial-gradient(
-    ellipse 112% 128% at 44% 50%,
+    ellipse 118% 132% at 42% 50%,
     rgba(var(--tint-c), 1) 0%,
-    rgba(var(--tint-c), 0.72) 42%,
-    rgba(var(--tint-c), 0.34) 72%,
+    rgba(var(--tint-c), 0.78) 38%,
+    rgba(var(--tint-c), 0.46) 68%,
     rgba(var(--tint-c), 0) 100%
   ) !important;
-  filter: blur(5px) saturate(112%) !important;
+  filter: blur(4px) saturate(122%) !important;
   mix-blend-mode: multiply !important;
   pointer-events: none !important;
   border: 0 !important;
-  box-shadow: none !important;
+  box-shadow: 0 0 0 2px rgba(var(--tint-c), 0.38) inset !important;
 }
 
-body.__tint-on ytd-compact-video-renderer.__tint-youtube-watch-card:hover::before,
-body.__tint-on ytd-compact-radio-renderer.__tint-youtube-watch-card:hover::before,
-body.__tint-on ytd-compact-playlist-renderer.__tint-youtube-watch-card:hover::before {
-  opacity: 0.24 !important;
+body.__tint-on .__tint-youtube-watch-card:hover::before {
+  opacity: 0.45 !important;
 }
 
-body.__tint-on ytd-compact-video-renderer.__tint-youtube-watch-card :is(#details, #meta, #metadata, #video-title, yt-formatted-string, h3, a, span),
-body.__tint-on ytd-compact-radio-renderer.__tint-youtube-watch-card :is(#details, #meta, #metadata, #video-title, yt-formatted-string, h3, a, span),
-body.__tint-on ytd-compact-playlist-renderer.__tint-youtube-watch-card :is(#details, #meta, #metadata, #video-title, yt-formatted-string, h3, a, span) {
+body.__tint-on .__tint-youtube-watch-card :is(#thumbnail, ytd-thumbnail, yt-thumbnail-view-model, .yt-thumbnail-view-model, #details, #meta, #metadata, #video-title, yt-formatted-string, h3, a, span, img, yt-image) {
   position: relative !important;
-  z-index: 3 !important;
-}
-
-/* TEMP DEBUG: remove after verifying the compact renderer overlay is visible on YouTube watch recommendations. */
-body.__tint-on ytd-compact-video-renderer.__tint-youtube-watch-card[data-tint-color="orange"]::before,
-body.__tint-on ytd-compact-radio-renderer.__tint-youtube-watch-card[data-tint-color="orange"]::before,
-body.__tint-on ytd-compact-playlist-renderer.__tint-youtube-watch-card[data-tint-color="orange"]::before {
-  background: radial-gradient(
-    ellipse 112% 128% at 44% 50%,
-    rgba(var(--tint-orange), 1) 0%,
-    rgba(var(--tint-orange), 0.78) 42%,
-    rgba(var(--tint-orange), 0.42) 72%,
-    rgba(var(--tint-orange), 0) 100%
-  ) !important;
-  box-shadow: 0 0 0 2px rgba(var(--tint-orange), 0.55) inset !important;
+  z-index: 2 !important;
 }
 
 body.__tint-on .__tint-youtube-watch-card::after {

@@ -109,7 +109,8 @@
   mix-blend-mode: multiply !important;
 }
 
-body.__tint-on.__tint-youtube-atmosphere #__tint-page-wash {
+body.__tint-on.__tint-youtube-atmosphere #__tint-page-wash,
+body.__tint-on.__tint-youtube-logo-preview #__tint-page-wash {
   opacity: 1 !important;
 }
 
@@ -186,6 +187,7 @@ body.__tint-on .__tint-youtube-card::before {
   ) !important;
   filter: blur(2px) saturate(102%) !important;
   mix-blend-mode: multiply !important;
+  opacity: 0 !important;
 }
 
 body.__tint-on .__tint-youtube-card:hover::before {
@@ -195,6 +197,7 @@ body.__tint-on .__tint-youtube-card:hover::before {
     rgba(var(--tint-c), clamp(0.024, calc(var(--tint-i, 0.5) * 0.055), 0.055)) 54%,
     rgba(var(--tint-c), 0) 100%
   ) !important;
+  opacity: 1 !important;
 }
 
 body.__tint-on .__tint-youtube-card::after {
@@ -228,19 +231,10 @@ body.__tint-on .__tint-youtube-card:hover::after {
 }
 
 
-/* YouTube watch recommendations: inline atmosphere is applied in content.js.
- * This intentionally bypasses the old pseudo-element-only sidebar path because
- * YouTube's compact renderer stacking can hide ::before layers behind children.
- */
 body.__tint-on .__tint-youtube-watch-card {
   position: relative !important;
   overflow: visible !important;
   cursor: inherit !important;
-}
-
-body.__tint-on .__tint-youtube-watch-card::before,
-body.__tint-on .__tint-youtube-watch-card::after {
-  content: none !important;
 }
 
 /* ============================================================

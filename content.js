@@ -1023,6 +1023,8 @@
     document.body.classList.remove("__tint-on");
     clearTimeout(scrollAnalyzeTimer);
     scrollAnalyzeTimer = null;
+    clearTimeout(mutationTimer);
+    mutationTimer = null;
     clearYouTubeLogoPreview();
     clearYouTubePageAtmosphere();
     if (pageWashEl) pageWashEl.classList.remove("__tint-page-wash-logo-preview", "__tint-page-wash-shorts");
@@ -1094,6 +1096,7 @@
     if (!enabled || !isYouTubePage()) return;
     clearTimeout(mutationTimer);
     mutationTimer = setTimeout(() => {
+      if (!enabled) return;
       analyzeAndApply(false);
     }, 500);
   }
@@ -1106,6 +1109,7 @@
     if (!enabled) return;
     clearTimeout(mutationTimer);
     mutationTimer = setTimeout(() => {
+      if (!enabled) return;
       // Apply marks to newly-added candidates only; no stagger for incremental adds
       analyzeAndApply(false);
     }, 1200);

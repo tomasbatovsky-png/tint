@@ -928,10 +928,12 @@
       return (pos & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1;
     });
 
+    if (!enabled) return;
     fresh.forEach((r, i) => applyMark({ ...r, cardEligible: r.cardEligible || cardEligible.has(r.el) }, i, stagger));
   }
 
   function applyMark({ el, key, atm, intensity, label, cardEligible = false, isYouTubeCard = false, isYouTubeWatchCard = false, isYouTubeComment = false }, idx, stagger) {
+    if (!enabled) return;
     const rawColor = atm || window.__Tint.Signals[key]?.atm;
     const color = isYouTubePage() && rawColor === "red" ? "orange" : rawColor;
     if (!color) return;
@@ -962,14 +964,20 @@
    * Removes Tint-owned classes, state, timers, and visual overlays.
    * This section is critical for preventing page-wash or hover leakage.
    * ============================================================ */
+  function clearTintMarkState(el) {
+    if (!el) return;
+    el.classList.remove("__tint-mark", "__tint-youtube-card", "__tint-youtube-comment");
+    delete el.dataset.tintColor;
+    delete el.dataset.tintLabel;
+    el.style.removeProperty("--tint-i");
+    el.style.removeProperty("--tint-reveal-delay");
+  }
+
   function clearMarks() {
-    marked.forEach((_, el) => {
-      el.classList.remove("__tint-mark", "__tint-youtube-card", "__tint-youtube-comment");
-      delete el.dataset.tintColor;
-      delete el.dataset.tintLabel;
-      el.style.removeProperty("--tint-i");
-      el.style.removeProperty("--tint-reveal-delay");
-    });
+    marked.forEach((_, el) => clearTintMarkState(el));
+    document
+      .querySelectorAll(".__tint-mark, .__tint-youtube-card, .__tint-youtube-comment")
+      .forEach(clearTintMarkState);
     marked.clear();
   }
 
@@ -1029,8 +1037,10 @@
     clearYouTubePageAtmosphere();
     if (pageWashEl) pageWashEl.classList.remove("__tint-page-wash-logo-preview", "__tint-page-wash-shorts");
     hideCard();
-    // Defer clearing marks so opacity transition can complete
-    setTimeout(() => clearMarks(), 600);
+    clearMarks();
+    setTimeout(() => {
+      if (!enabled) clearMarks();
+    }, 600);
   }
 
   /* ===== Click handling — non-intrusive =====

@@ -768,6 +768,9 @@
     const opacity = 0.10;
     const edgeOpacity = 0.14;
 
+    wash.classList.add("__tint-page-wash-shorts");
+    wash.classList.remove("__tint-page-wash-logo-preview");
+    document.body.classList.remove("__tint-youtube-logo-preview");
     document.body.classList.add("__tint-youtube-atmosphere", "__tint-youtube-shorts");
     document.body.classList.toggle("__tint-youtube-shorts-fallback", Boolean(result.fallback));
     document.body.dataset.tintShortsAtmosphere = atm;
@@ -788,6 +791,7 @@
     delete document.body.dataset.tintShortsAtmosphere;
     if (!pageWashEl) return;
     pageWashEl.classList.remove("__tint-page-wash-active", "__tint-shorts-wash");
+    pageWashEl.classList.remove("__tint-page-wash-logo-preview", "__tint-page-wash-shorts");
     delete pageWashEl.dataset.tintShortsAtmosphere;
   }
 
@@ -977,6 +981,8 @@
   function showYouTubeLogoPreview() {
     if (!enabled || !isYouTubePage() || isYouTubeShortsPage() || document.body.classList.contains("__tint-youtube-atmosphere")) return;
     const wash = ensurePageWash();
+    wash.classList.add("__tint-page-wash-logo-preview");
+    wash.classList.remove("__tint-page-wash-shorts");
     document.body.classList.add("__tint-youtube-logo-preview");
     wash.style.setProperty("--tint-page-c", ATM_RGB.orange);
     wash.style.setProperty("--tint-page-opacity", "0.035");
@@ -986,6 +992,7 @@
 
   function hideYouTubeLogoPreview() {
     document.body.classList.remove("__tint-youtube-logo-preview");
+    if (pageWashEl) pageWashEl.classList.remove("__tint-page-wash-logo-preview");
     if (!isYouTubePage() || document.body.classList.contains("__tint-youtube-atmosphere")) return;
     clearYouTubePageAtmosphere();
   }
@@ -1006,6 +1013,7 @@
     clearTimeout(scrollAnalyzeTimer);
     scrollAnalyzeTimer = null;
     clearYouTubePageAtmosphere();
+    if (pageWashEl) pageWashEl.classList.remove("__tint-page-wash-logo-preview", "__tint-page-wash-shorts");
     hideCard();
     // Defer clearing marks so opacity transition can complete
     setTimeout(() => clearMarks(), 600);

@@ -228,46 +228,17 @@ body.__tint-on .__tint-youtube-card:hover::after {
 }
 
 
-/* YouTube watch recommendations: temporary debug visibility on the outer visible compact renderer. */
+/* YouTube watch recommendations: inline atmosphere is applied in content.js.
+ * This intentionally bypasses the old pseudo-element-only sidebar path because
+ * YouTube's compact renderer stacking can hide ::before layers behind children.
+ */
 body.__tint-on .__tint-youtube-watch-card {
   position: relative !important;
-  isolation: isolate !important;
   overflow: visible !important;
-  border: 0 !important;
-  box-shadow: none !important;
   cursor: inherit !important;
 }
 
-body.__tint-on .__tint-youtube-watch-card::before {
-  content: "" !important;
-  position: absolute !important;
-  inset: -4px -6px !important;
-  z-index: 1 !important;
-  border-radius: 16px !important;
-  opacity: 0.35 !important;
-  background: radial-gradient(
-    ellipse 118% 132% at 42% 50%,
-    rgba(var(--tint-c), 1) 0%,
-    rgba(var(--tint-c), 0.78) 38%,
-    rgba(var(--tint-c), 0.46) 68%,
-    rgba(var(--tint-c), 0) 100%
-  ) !important;
-  filter: blur(4px) saturate(122%) !important;
-  mix-blend-mode: multiply !important;
-  pointer-events: none !important;
-  border: 0 !important;
-  box-shadow: 0 0 0 2px rgba(var(--tint-c), 0.38) inset !important;
-}
-
-body.__tint-on .__tint-youtube-watch-card:hover::before {
-  opacity: 0.45 !important;
-}
-
-body.__tint-on .__tint-youtube-watch-card :is(#thumbnail, ytd-thumbnail, yt-thumbnail-view-model, .yt-thumbnail-view-model, #details, #meta, #metadata, #video-title, yt-formatted-string, h3, a, span, img, yt-image) {
-  position: relative !important;
-  z-index: 2 !important;
-}
-
+body.__tint-on .__tint-youtube-watch-card::before,
 body.__tint-on .__tint-youtube-watch-card::after {
   content: none !important;
 }

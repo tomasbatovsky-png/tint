@@ -1,14 +1,14 @@
 /*
  * Tint Clean MVP
- * Page-level signal dot.
+ * Ambient page-level signal dot.
  */
 
 :root {
-  --tint-clean-green: 82, 146, 105;
-  --tint-clean-blue: 118, 162, 196;
-  --tint-clean-orange: 224, 148, 86;
-  --tint-clean-gray: 150, 154, 160;
-  --tint-clean-violet: 142, 105, 185;
+  --tint-clean-green: 96, 132, 102;
+  --tint-clean-blue: 105, 138, 170;
+  --tint-clean-orange: 206, 128, 62;
+  --tint-clean-gray: 135, 139, 145;
+  --tint-clean-violet: 132, 100, 164;
 }
 
 #__tint_clean_toggle {
@@ -22,7 +22,7 @@
   padding: 8px 12px !important;
   border: 1px solid rgba(0, 0, 0, 0.08) !important;
   border-radius: 999px !important;
-  background: rgba(250, 250, 248, 0.92) !important;
+  background: rgba(250, 250, 248, 0.90) !important;
   color: #242424 !important;
   font: 12px/1.1 -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", system-ui, sans-serif !important;
   cursor: pointer !important;
@@ -53,33 +53,94 @@
   top: 18px !important;
   right: 18px !important;
   z-index: 2147483646 !important;
-  width: 18px !important;
-  height: 18px !important;
-  border: none !important;
+  width: 15px !important;
+  height: 15px !important;
+  padding: 0 !important;
+  border: 0 !important;
   border-radius: 50% !important;
   cursor: pointer !important;
+  opacity: 0.72 !important;
   background: rgb(var(--tint-primary, var(--tint-clean-blue))) !important;
   box-shadow:
-    0 0 0 5px rgba(var(--tint-primary, var(--tint-clean-blue)), 0.10),
-    0 8px 24px rgba(0, 0, 0, 0.14) !important;
-  transition: transform 140ms ease, box-shadow 140ms ease, opacity 140ms ease !important;
+    0 0 0 4px rgba(var(--tint-primary, var(--tint-clean-blue)), calc(0.045 + var(--tint-confidence, 0.3) * 0.08)),
+    0 8px 24px rgba(var(--tint-primary, var(--tint-clean-blue)), calc(0.06 + var(--tint-confidence, 0.3) * 0.10)),
+    0 8px 22px rgba(0, 0, 0, 0.10) !important;
+  transition: transform 220ms ease, box-shadow 220ms ease, opacity 220ms ease, filter 220ms ease !important;
+}
+
+#__tint_clean_signal::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: -7px !important;
+  border-radius: inherit !important;
+  background: radial-gradient(circle, rgba(var(--tint-primary, var(--tint-clean-blue)), 0.12), transparent 64%) !important;
+  opacity: 0.7 !important;
+  pointer-events: none !important;
 }
 
 #__tint_clean_signal.mixed {
-  background: linear-gradient(
-    135deg,
-    rgb(var(--tint-primary)) 0%,
-    rgb(var(--tint-primary)) 50%,
-    rgb(var(--tint-secondary)) 50%,
-    rgb(var(--tint-secondary)) 100%
+  background: conic-gradient(
+    from 215deg,
+    rgb(var(--tint-primary)) 0deg,
+    rgb(var(--tint-primary)) 252deg,
+    rgb(var(--tint-secondary)) 252deg,
+    rgb(var(--tint-secondary)) 360deg
   ) !important;
 }
 
 #__tint_clean_signal:hover {
-  transform: scale(1.08) !important;
+  opacity: 0.94 !important;
+  transform: scale(1.09) !important;
+  filter: saturate(1.06) !important;
   box-shadow:
-    0 0 0 7px rgba(var(--tint-primary, var(--tint-clean-blue)), 0.13),
-    0 10px 30px rgba(0, 0, 0, 0.18) !important;
+    0 0 0 6px rgba(var(--tint-primary, var(--tint-clean-blue)), calc(0.06 + var(--tint-confidence, 0.3) * 0.10)),
+    0 10px 30px rgba(var(--tint-primary, var(--tint-clean-blue)), calc(0.08 + var(--tint-confidence, 0.3) * 0.13)),
+    0 12px 28px rgba(0, 0, 0, 0.13) !important;
+}
+
+#__tint_clean_signal[data-atmosphere="green"] {
+  animation: tint-green-breathe 5.6s ease-in-out infinite !important;
+}
+
+#__tint_clean_signal[data-atmosphere="blue"] {
+  animation: tint-blue-still 7.5s ease-in-out infinite !important;
+}
+
+#__tint_clean_signal[data-atmosphere="orange"] {
+  animation: tint-orange-pulse 2.8s ease-in-out infinite !important;
+}
+
+#__tint_clean_signal[data-atmosphere="gray"] {
+  animation: tint-gray-haze 8s ease-in-out infinite !important;
+}
+
+#__tint_clean_signal[data-atmosphere="violet"] {
+  animation: tint-violet-drift 4.6s ease-in-out infinite !important;
+}
+
+@keyframes tint-green-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.66; }
+  50% { transform: scale(1.06); opacity: 0.82; }
+}
+
+@keyframes tint-blue-still {
+  0%, 100% { transform: scale(1); opacity: 0.70; }
+  50% { transform: scale(1.025); opacity: 0.78; }
+}
+
+@keyframes tint-orange-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.72; }
+  50% { transform: scale(1.09); opacity: 0.90; }
+}
+
+@keyframes tint-gray-haze {
+  0%, 100% { transform: scale(1); opacity: 0.50; filter: saturate(0.78); }
+  50% { transform: scale(1.025); opacity: 0.62; filter: saturate(0.68); }
+}
+
+@keyframes tint-violet-drift {
+  0%, 100% { transform: scale(1); opacity: 0.68; }
+  50% { transform: scale(1.055) translateY(-1px); opacity: 0.84; }
 }
 
 #__tint_clean_panel {
@@ -87,19 +148,20 @@
   top: 48px !important;
   right: 18px !important;
   z-index: 2147483645 !important;
-  width: 220px !important;
+  width: 236px !important;
   padding: 12px 14px !important;
   border-radius: 16px !important;
-  background: rgba(250, 250, 248, 0.96) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  background: rgba(250, 250, 248, 0.94) !important;
   color: #222 !important;
   font: 12px/1.45 -apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", system-ui, sans-serif !important;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.14) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.13) !important;
   -webkit-backdrop-filter: saturate(180%) blur(20px) !important;
   backdrop-filter: saturate(180%) blur(20px) !important;
   opacity: 0 !important;
   transform: translateY(-6px) scale(0.98) !important;
   pointer-events: none !important;
-  transition: opacity 140ms ease, transform 140ms ease !important;
+  transition: opacity 160ms ease, transform 160ms ease !important;
 }
 
 #__tint_clean_panel.show {
@@ -114,5 +176,12 @@
 }
 
 .tint-clean-panel-copy {
-  opacity: 0.78 !important;
+  opacity: 0.76 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #__tint_clean_signal {
+    animation: none !important;
+    transition: opacity 120ms ease !important;
+  }
 }

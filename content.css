@@ -18,7 +18,9 @@
 
 /* ============================================================
  * FLOATING TOGGLE
- * Bottom-right, ambient capsule, Apple-style switch
+ * Ownership: Core UI.
+ * Purpose: persistent extension control only; does not own atmosphere layers.
+ * Bottom-right, ambient capsule, Apple-style switch.
  * ============================================================ */
 #__tint-toggle {
   position: fixed !important;
@@ -87,6 +89,9 @@
 
 /* ============================================================
  * PAGE WASH
+ * Ownership: Shared visual primitive.
+ * Purpose: hidden base infrastructure for explicit ambient states only.
+ * Activation owners: YouTube logo preview and Shorts adapter.
  * Hidden by default. Non-Shorts YouTube only uses it for the logo hover
  * preview; Shorts keeps its fullscreen ambient behavior below.
  * ============================================================ */
@@ -116,6 +121,8 @@ body.__tint-on.__tint-youtube-shorts #__tint-page-wash {
 
 /* ============================================================
  * ATMOSPHERIC OVERLAY
+ * Ownership: Shared visual primitive.
+ * Purpose: generic marked-content atmosphere, not normal YouTube cards.
  * Radial gradient haze with blur. Soft edges, no defined box.
  * ============================================================ */
 .__tint-mark {
@@ -162,7 +169,7 @@ body.__tint-on .__tint-mark:hover::before {
 .__tint-mark[data-tint-color="red"]    { --tint-c: var(--tint-red); }
 .__tint-mark[data-tint-color="gray"]   { --tint-c: var(--tint-gray); }
 
-/* Make text sit above its own overlay */
+/* Ownership: Shared visual primitive. Make text sit above its own overlay. */
 .__tint-mark > * {
   position: relative !important;
   z-index: 1 !important;
@@ -170,6 +177,8 @@ body.__tint-on .__tint-mark:hover::before {
 
 /* ============================================================
  * YOUTUBE CARD ATMOSPHERE
+ * Ownership: YouTube adapter.
+ * Purpose: normal YouTube card hover model for homepage, watch sidebar, and search.
  * One shared hover-only model for homepage, watch sidebar, and search.
  * ============================================================ */
 body.__tint-on .__tint-youtube-card {
@@ -235,6 +244,8 @@ body.__tint-on .__tint-youtube-card:hover::after {
 
 /* ============================================================
  * REASON CARD
+ * Ownership: Explanation UI.
+ * Purpose: floating detail panel for eligible non-ambient marked elements.
  * Floating small card near clicked element. Telegram-style copy.
  * ============================================================ */
 #__tint-card {
@@ -313,6 +324,8 @@ body.__tint-on .__tint-youtube-card:hover::after {
 
 /* ============================================================
  * YOUTUBE COMMENT EDGE GLOW
+ * Ownership: YouTube adapter.
+ * Purpose: platform-specific comment variant of the shared mark overlay.
  * A quiet left-edge presence for tinted comments, not a border or box.
  * ============================================================ */
 body.__tint-on ytd-comment-thread-renderer .__tint-mark::before,
@@ -363,6 +376,8 @@ body.__tint-on ytd-comment-renderer .__tint-mark::after {
 
 /* ============================================================
  * YOUTUBE SHORTS ATMOSPHERE
+ * Ownership: Shorts adapter.
+ * Purpose: platform-specific fullscreen ambient override using page wash.
  * Fullscreen psychological weather: ambient wash and edge glow only.
  * ============================================================ */
 body.__tint-on.__tint-youtube-shorts #__tint-page-wash {

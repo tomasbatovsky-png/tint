@@ -113,6 +113,10 @@ body.__tint-on.__tint-youtube-atmosphere #__tint-page-wash {
   opacity: 1 !important;
 }
 
+body.__tint-on.__tint-youtube-logo-preview #__tint-page-wash {
+  opacity: 0.72 !important;
+}
+
 /* ============================================================
  * ATMOSPHERIC OVERLAY
  * Radial gradient haze with blur. Soft edges, no defined box.
@@ -180,21 +184,18 @@ body.__tint-on .__tint-youtube-card::before {
   border-radius: 20px !important;
   background: radial-gradient(
     ellipse at center,
-    rgba(var(--tint-c), clamp(0.04, calc(var(--tint-i, 0.5) * 0.085), 0.08)) 0%,
-    rgba(var(--tint-c), clamp(0.018, calc(var(--tint-i, 0.5) * 0.045), 0.045)) 54%,
-    rgba(var(--tint-c), 0) 100%
-  ) !important;
-  filter: blur(2px) saturate(102%) !important;
-  mix-blend-mode: multiply !important;
-}
-
-body.__tint-on .__tint-youtube-card:hover::before {
-  background: radial-gradient(
-    ellipse at center,
     rgba(var(--tint-c), clamp(0.055, calc(var(--tint-i, 0.5) * 0.11), 0.10)) 0%,
     rgba(var(--tint-c), clamp(0.024, calc(var(--tint-i, 0.5) * 0.055), 0.055)) 54%,
     rgba(var(--tint-c), 0) 100%
   ) !important;
+  filter: blur(2px) saturate(102%) !important;
+  mix-blend-mode: multiply !important;
+  opacity: 0 !important;
+  transition-delay: 0ms !important;
+}
+
+body.__tint-on .__tint-youtube-card:hover::before {
+  opacity: 1 !important;
 }
 
 body.__tint-on .__tint-youtube-card::after {
@@ -228,19 +229,10 @@ body.__tint-on .__tint-youtube-card:hover::after {
 }
 
 
-/* YouTube watch recommendations: inline atmosphere is applied in content.js.
- * This intentionally bypasses the old pseudo-element-only sidebar path because
- * YouTube's compact renderer stacking can hide ::before layers behind children.
- */
 body.__tint-on .__tint-youtube-watch-card {
   position: relative !important;
   overflow: visible !important;
   cursor: inherit !important;
-}
-
-body.__tint-on .__tint-youtube-watch-card::before,
-body.__tint-on .__tint-youtube-watch-card::after {
-  content: none !important;
 }
 
 /* ============================================================

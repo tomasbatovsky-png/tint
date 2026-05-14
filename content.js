@@ -45,6 +45,7 @@
   let toggleEl = null;
   let cardEl = null;
   let pageWashEl = null;
+  let lastYouTubeCandidateDebug = { found: 0, skippedAlreadyMarked: 0, skippedInvalid: 0 };
 
   /* ===== Toggle ===== */
   function createToggle() {
@@ -199,6 +200,9 @@
     "ytd-rich-grid-media",
     "ytd-rich-item-renderer",
     "ytd-video-renderer",
+    "ytd-playlist-renderer",
+    "ytd-radio-renderer",
+    "ytd-channel-renderer",
     "ytd-compact-video-renderer",
     "ytd-grid-video-renderer",
     "ytd-reel-item-renderer",
@@ -207,36 +211,30 @@
   ];
 
   const YOUTUBE_WATCH_RECOMMENDATION_SELECTORS = [
-    "ytd-compact-video-renderer",
-    "ytd-rich-item-renderer",
-    "ytd-video-renderer",
-    "ytd-grid-video-renderer",
-    "ytd-item-section-renderer",
     "#related ytd-compact-video-renderer",
     "#secondary ytd-compact-video-renderer",
     "#secondary-inner ytd-compact-video-renderer",
-    "ytd-watch-next-secondary-results-renderer *",
-    "a#thumbnail",
-    "#video-title",
-    "yt-formatted-string#video-title",
-    // Keep legacy non-video recommendation renderer support.
-    "ytd-compact-radio-renderer",
-    "ytd-compact-playlist-renderer"
+    "#related ytd-compact-radio-renderer",
+    "#secondary ytd-compact-radio-renderer",
+    "#secondary-inner ytd-compact-radio-renderer",
+    "#related ytd-compact-playlist-renderer",
+    "#secondary ytd-compact-playlist-renderer",
+    "#secondary-inner ytd-compact-playlist-renderer"
   ];
 
   const YOUTUBE_WATCH_RECOMMENDATION_CONTAINERS = [
     "ytd-compact-video-renderer",
-    "ytd-rich-item-renderer",
-    "ytd-video-renderer",
-    "ytd-grid-video-renderer",
     "ytd-compact-radio-renderer",
-    "ytd-compact-playlist-renderer",
-    "yt-lockup-view-model",
-    "ytd-item-section-renderer"
+    "ytd-compact-playlist-renderer"
   ];
 
   let lastYouTubeWatchRecommendationDebug = { rawNodes: 0, filteredCards: 0 };
   let lastYouTubeWatchCardClassDebug = { count: 0, firstRect: null, renderTargetsLogged: 0 };
+  let scrollAnalyzeTimer = null;
+
+  function logYouTubeDebug(message, ...args) {
+    if (isYouTubePage()) console.log(`[Tint] ${message}`, ...args);
+  }
 
   const YOUTUBE_SHORTS_SELECTORS = [
     "ytd-reel-video-renderer",
@@ -304,6 +302,10 @@
     return isYouTubePage() && window.location.pathname === "/watch";
   }
 
+  function isYouTubeSearchPage() {
+    return isYouTubePage() && window.location.pathname === "/results";
+  }
+
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
   }
@@ -358,45 +360,71 @@
 
   function collectVisibleYouTubeThumbnailClusters(limit = 24) {
     const clusters = new Set();
+    let rawNodes = 0;
+    let skippedAlreadyMarked = 0;
+    let skippedInvalid = 0;
 
     for (const sel of YOUTUBE_THUMBNAIL_CLUSTER_SELECTORS) {
       document.querySelectorAll(sel).forEach(el => {
-        if (isVisibleYouTubeThumbnailCluster(el)) clusters.add(el);
+        rawNodes += 1;
+        if (el.classList.contains("__tint-youtube-card")) {
+          skippedAlreadyMarked += 1;
+          return;
+        }
+        if (isVisibleYouTubeThumbnailCluster(el)) {
+          clusters.add(el);
+        } else {
+          skippedInvalid += 1;
+        }
       });
     }
 
-    return sortYouTubeCardsByScreenPosition([...clusters]).slice(0, limit);
+    const sorted = sortYouTubeCardsByScreenPosition([...clusters]).slice(0, limit);
+    lastYouTubeCandidateDebug = { found: sorted.length, skippedAlreadyMarked, skippedInvalid, rawNodes };
+    return sorted;
   }
 
   function collectVisibleYouTubeWatchRecommendationCards(limit = 36) {
     const rawNodes = new Set();
     const cards = new Set();
+    let skippedAlreadyMarked = 0;
+    let skippedInvalid = 0;
 
     for (const sel of YOUTUBE_WATCH_RECOMMENDATION_SELECTORS) {
       try {
         document.querySelectorAll(sel).forEach(el => {
           rawNodes.add(el);
           const card = findNearestVisibleYouTubeWatchRecommendationContainer(el);
-          if (card) cards.add(card);
+          if (card) {
+            if (card.classList.contains("__tint-youtube-card")) {
+              skippedAlreadyMarked += 1;
+            } else {
+              cards.add(card);
+            }
+          } else {
+            skippedInvalid += 1;
+          }
         });
       } catch (e) { /* selector may not match on this YouTube surface */ }
     }
 
     const filtered = dedupeNestedYouTubeWatchRecommendationCards([...cards])
       .filter(isVisibleYouTubeWatchRecommendationCard);
+    skippedInvalid += cards.size - filtered.length;
     const sorted = sortYouTubeCardsByScreenPosition(filtered).slice(0, limit);
     lastYouTubeWatchRecommendationDebug = { rawNodes: rawNodes.size, filteredCards: sorted.length };
+    lastYouTubeCandidateDebug = { found: sorted.length, skippedAlreadyMarked, skippedInvalid, rawNodes: rawNodes.size };
     return sorted;
   }
 
   function isVisibleYouTubeThumbnailCluster(el) {
     const thumb = el.querySelector("#thumbnail, a#thumbnail, ytd-thumbnail, yt-thumbnail-view-model, .yt-thumbnail-view-model");
-    if (!thumb) return false;
+    if (!thumb && !el.matches("ytd-channel-renderer")) return false;
 
     const rect = el.getBoundingClientRect();
-    const thumbRect = thumb.getBoundingClientRect();
+    const thumbRect = thumb ? thumb.getBoundingClientRect() : null;
     const isVisible = rect.bottom > 0 && rect.top < window.innerHeight && rect.width >= 160 && rect.height >= 80;
-    const thumbVisible = thumbRect.width >= 80 && thumbRect.height >= 45;
+    const thumbVisible = thumbRect ? thumbRect.width >= 80 && thumbRect.height >= 45 : true;
     return isVisible && thumbVisible;
   }
 
@@ -475,30 +503,7 @@
 
   function getYouTubeWatchRecommendationVisualContainer(card) {
     if (!card) return null;
-
-    const outerRenderer = card.matches("ytd-compact-video-renderer, ytd-compact-radio-renderer, ytd-compact-playlist-renderer")
-      ? card
-      : card.closest("ytd-compact-video-renderer, ytd-compact-radio-renderer, ytd-compact-playlist-renderer");
-
-    if (outerRenderer && isVisibleYouTubeWatchRecommendationPaintTarget(outerRenderer)) return outerRenderer;
-
-    const visualSelectors = [
-      ":scope > #dismissible",
-      ":scope #dismissible",
-      ":scope > .yt-lockup-view-model-wiz",
-      ":scope .yt-lockup-view-model-wiz",
-      ":scope > .yt-lockup-view-model",
-      ":scope .yt-lockup-view-model"
-    ];
-
-    for (const selector of visualSelectors) {
-      try {
-        const visual = card.querySelector(selector);
-        if (visual && isVisibleYouTubeWatchRecommendationPaintTarget(visual)) return visual;
-      } catch (e) { /* selector may not match on this YouTube surface */ }
-    }
-
-    return findNearestVisibleYouTubeWatchPaintParent(card) || (isVisibleYouTubeWatchRecommendationPaintTarget(card) ? card : null);
+    return isVisibleYouTubeWatchRecommendationPaintTarget(card) ? card : null;
   }
 
   function findNearestVisibleYouTubeWatchPaintParent(el) {
@@ -515,27 +520,8 @@
     return rect.width >= 140 && rect.height >= 40;
   }
 
-  function applyYouTubeWatchInlineAtmosphere(el, color, intensity) {
-    if (!el || !ATM_RGB[color]) return;
-
-    if (el.dataset.tintOriginalStyle === undefined) {
-      el.dataset.tintOriginalStyle = el.getAttribute("style") || "";
-    }
-
-    const rgb = ATM_RGB[color];
-    const baseOpacity = clamp(0.18, intensity * 0.24, 0.28);
-    const edgeOpacity = clamp(0.10, intensity * 0.14, 0.18);
-
-    el.style.setProperty("background-color", `rgba(${rgb}, ${baseOpacity.toFixed(2)})`, "important");
-    el.style.setProperty(
-      "background-image",
-      `radial-gradient(ellipse 125% 150% at 38% 50%, rgba(${rgb}, ${baseOpacity.toFixed(2)}) 0%, rgba(${rgb}, ${edgeOpacity.toFixed(2)}) 58%, rgba(${rgb}, 0.04) 100%)`,
-      "important"
-    );
-    el.style.setProperty("background-blend-mode", "normal", "important");
-    el.style.setProperty("border-radius", "14px", "important");
-    el.style.setProperty("box-shadow", `0 0 0 1px rgba(${rgb}, 0.18), 0 8px 28px rgba(${rgb}, 0.12)`, "important");
-    el.style.setProperty("transition", "background-color 180ms ease, background-image 180ms ease, box-shadow 180ms ease", "important");
+  function applyYouTubeWatchInlineAtmosphere() {
+    // Watch recommendations now share the hover-only YouTube card CSS.
   }
 
   function clearYouTubeWatchInlineAtmosphere(el) {
@@ -729,47 +715,7 @@
     }
     clearYouTubeShortsAtmosphere();
 
-    const clusters = isYouTubeWatchPage()
-      ? collectVisibleYouTubeWatchRecommendationCards()
-      : collectVisibleYouTubeThumbnailClusters();
-    if (clusters.length < 3) {
-      clearYouTubePageAtmosphere();
-      return;
-    }
-
-    const scored = clusters.map(el => {
-      const text = getYouTubeClusterText(el);
-      const atmosphere = scoreYouTubeRecommendationAtmosphere(text);
-      return atmosphere ? { el, text, ...atmosphere } : null;
-    }).filter(Boolean);
-
-    if (scored.length < 3) {
-      clearYouTubePageAtmosphere();
-      return;
-    }
-
-    const total = scored.reduce((sum, item) => sum + item.intensity, 0);
-    const high = scored.filter(item => item.intensity >= 0.34).length;
-    const average = total / scored.length;
-    const density = high / scored.length;
-    const strongest = scored.reduce((best, item) => item.intensity > best.intensity ? item : best, scored[0]);
-    const atmosphere = clamp((average * 0.68) + (density * 0.22) + (strongest.intensity * 0.1), 0, 1);
-
-    if (atmosphere < 0.06) {
-      clearYouTubePageAtmosphere();
-      return;
-    }
-
-    const opacity = clamp(0.018 + atmosphere * 0.035, 0.02, 0.04);
-    const atm = strongest.atm || "blue";
-    const color = ATM_COLORS[atm].match(/\d+/g).join(", ");
-    const feedRect = getYouTubeFeedRect(clusters);
-
-    document.body.classList.add("__tint-youtube-atmosphere");
-    pageWashEl.style.setProperty("--tint-page-c", color);
-    pageWashEl.style.setProperty("--tint-page-opacity", opacity.toFixed(3));
-    pageWashEl.style.setProperty("--tint-page-x", `${feedRect.x}%`);
-    pageWashEl.style.setProperty("--tint-page-y", `${feedRect.y}%`);
+    clearYouTubePageAtmosphere();
   }
 
   function getVisibleYouTubeShortsAtmosphere({ debug = false } = {}) {
@@ -899,7 +845,7 @@
   }
 
   function clearYouTubePageAtmosphere() {
-    document.body.classList.remove("__tint-youtube-atmosphere", "__tint-youtube-shorts", "__tint-youtube-shorts-fallback");
+    document.body.classList.remove("__tint-youtube-atmosphere", "__tint-youtube-shorts", "__tint-youtube-shorts-fallback", "__tint-youtube-logo-preview");
     delete document.body.dataset.tintShortsAtmosphere;
     if (!pageWashEl) return;
     pageWashEl.classList.remove("__tint-page-wash-active", "__tint-shorts-wash");
@@ -926,8 +872,12 @@
     const candidates = collectCandidates();
     const fresh = [];
     const onYouTube = isYouTubePage();
+    let youtubeSkippedInvalid = 0;
 
-    if (onYouTube) console.log("[Tint] site youtube");
+    if (onYouTube) {
+      console.log("[Tint] youtube run");
+      console.log(`[Tint] enabled ${enabled}`);
+    }
     console.log("[Tint] candidates", candidates.length);
 
     if (onYouTube) {
@@ -939,14 +889,20 @@
         ? []
         : watchRecommendationsActive
           ? collectVisibleYouTubeWatchRecommendationCards(36)
-          : collectVisibleYouTubeThumbnailClusters(36);
+          : collectVisibleYouTubeThumbnailClusters(isYouTubeSearchPage() ? 48 : 36);
       const atmospheres = { green: 0, blue: 0, orange: 0, gray: 0 };
 
       cards.forEach(el => {
         const text = getYouTubeClusterText(el);
-        if (text.length < 8) return;
+        if (text.length < 8) {
+          youtubeSkippedInvalid += 1;
+          return;
+        }
         const result = scoreYouTubeRecommendationAtmosphere(text);
-        if (!result) return;
+        if (!result) {
+          youtubeSkippedInvalid += 1;
+          return;
+        }
         atmospheres[result.atm] += 1;
         fresh.push({
           el,
@@ -968,6 +924,9 @@
         console.log("[Tint] youtube cards", cards.length);
         console.log("[Tint] youtube atmospheres", atmospheres);
       }
+      console.log(`[Tint] candidates found ${lastYouTubeCandidateDebug.found}`);
+      console.log(`[Tint] skipped already marked ${lastYouTubeCandidateDebug.skippedAlreadyMarked}`);
+      console.log(`[Tint] skipped invalid ${lastYouTubeCandidateDebug.skippedInvalid + youtubeSkippedInvalid}`);
     }
 
     for (const el of candidates) {
@@ -998,6 +957,7 @@
     }
 
     console.log("[Tint] marked", fresh.length);
+    if (onYouTube) console.log(`[Tint] candidates marked ${fresh.filter(item => item.isYouTubeCard).length}`);
 
     const cardEligible = new Set(
       [...fresh]
@@ -1007,7 +967,7 @@
         .map(r => r.el)
     );
 
-    if (onYouTube) updateYouTubePageAtmosphere();
+    if (onYouTube && (getVisibleYouTubeShortsAtmosphere() || document.body.classList.contains("__tint-youtube-shorts"))) updateYouTubePageAtmosphere();
 
     // Sort by document position for top-to-bottom reveal wave
     fresh.sort((a, b) => {
@@ -1080,14 +1040,26 @@
   }
 
   /* ===== Enable / disable ===== */
+  function scheduleYouTubeAnalyze(delay = 800) {
+    if (!enabled || !isYouTubePage()) return;
+    clearTimeout(scrollAnalyzeTimer);
+    scrollAnalyzeTimer = setTimeout(() => {
+      scrollAnalyzeTimer = null;
+      if (enabled && isYouTubePage()) analyzeAndApply(false);
+    }, delay);
+  }
+
   function enableTint() {
     document.body.classList.add("__tint-on");
     // Slight delay to let CSS pick up the class transition
     requestAnimationFrame(() => analyzeAndApply(true));
+    scheduleYouTubeAnalyze(1200);
   }
 
   function disableTint() {
     document.body.classList.remove("__tint-on");
+    clearTimeout(scrollAnalyzeTimer);
+    scrollAnalyzeTimer = null;
     clearYouTubePageAtmosphere();
     hideCard();
     // Defer clearing marks so opacity transition can complete
@@ -1122,17 +1094,56 @@
     showCard(tinted);
   }, true);
 
+
+  function getYouTubeLogoLink(el) {
+    return el?.closest?.('a#logo, ytd-topbar-logo-renderer a, #logo-icon, #logo');
+  }
+
+  function showYouTubeLogoPreview(target) {
+    if (!enabled || !isYouTubePage() || isYouTubeShortsPage()) return;
+    const logo = getYouTubeLogoLink(target);
+    if (!logo) return;
+    const rect = logo.getBoundingClientRect();
+    const wash = ensurePageWash();
+    document.body.classList.add("__tint-youtube-logo-preview");
+    wash.style.setProperty("--tint-page-c", ATM_COLORS.blue.match(/\d+/g).join(", "));
+    wash.style.setProperty("--tint-page-opacity", "0.030");
+    wash.style.setProperty("--tint-page-x", `${clamp(((rect.left + rect.width / 2) / Math.max(window.innerWidth, 1)) * 100, 5, 35)}%`);
+    wash.style.setProperty("--tint-page-y", `${clamp(((rect.top + rect.height / 2) / Math.max(window.innerHeight, 1)) * 100, 4, 24)}%`);
+  }
+
+  function hideYouTubeLogoPreview() {
+    if (!document.body.classList.contains("__tint-youtube-logo-preview")) return;
+    document.body.classList.remove("__tint-youtube-logo-preview");
+    if (!document.body.classList.contains("__tint-youtube-atmosphere") && pageWashEl) {
+      pageWashEl.style.removeProperty("--tint-page-c");
+      pageWashEl.style.removeProperty("--tint-page-opacity");
+      pageWashEl.style.removeProperty("--tint-page-x");
+      pageWashEl.style.removeProperty("--tint-page-y");
+    }
+  }
+
+  document.addEventListener("mouseover", (e) => showYouTubeLogoPreview(e.target), true);
+  document.addEventListener("mouseout", (e) => {
+    const logo = getYouTubeLogoLink(e.target);
+    if (logo && (!e.relatedTarget || !logo.contains(e.relatedTarget))) hideYouTubeLogoPreview();
+  }, true);
+
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") hideCard();
   });
   window.addEventListener("scroll", () => {
     hideCard();
-    if (enabled && isYouTubePage()) window.requestAnimationFrame(updateYouTubePageAtmosphere);
+    if (!enabled || !isYouTubePage()) return;
+    scheduleYouTubeAnalyze(800);
   }, { passive: true });
   window.addEventListener("resize", () => {
     hideCard();
-    if (enabled && isYouTubePage()) updateYouTubePageAtmosphere();
+    if (enabled && isYouTubePage()) analyzeAndApply(false);
   });
+  document.addEventListener("yt-navigate-finish", () => scheduleYouTubeAnalyze(800));
+  document.addEventListener("yt-page-data-updated", () => scheduleYouTubeAnalyze(800));
+  window.addEventListener("popstate", () => scheduleYouTubeAnalyze(800));
 
   /* ===== Dynamic content (infinite scroll, etc.) ===== */
   let mutationTimer = null;
@@ -1150,7 +1161,9 @@
     createToggle();
     createCard();
     createPageWash();
+    logYouTubeDebug("youtube run");
     chrome.storage.local.get(["tintEnabled"], (result) => {
+      logYouTubeDebug(`enabled ${Boolean(result.tintEnabled)}`);
       if (result.tintEnabled) {
         enabled = true;
         toggleEl.classList.add("on");

@@ -1,15 +1,15 @@
 /*
  * Tint Clean MVP
  *
- * A text-first perceptual layer for the web.
- * Local rules first. Optional API later.
+ * Page-level perceptual signal dot.
+ * The text is used for analysis, but the page itself is not tinted.
  */
 
 (() => {
   const API_ENDPOINT = "";
   const TOGGLE_ID = "__tint_clean_toggle";
-  const OWNED_CLASS = "__tint_clean_text";
-  const SCANNED_ATTR = "data-tint-clean-scanned";
+  const DOT_ID = "__tint_clean_signal";
+  const PANEL_ID = "__tint_clean_panel";
 
   const COLORS = {
     green: "82, 146, 105",
@@ -29,6 +29,8 @@
 
   let enabled = false;
   let toggle = null;
+  let dot = null;
+  let panel = null;
   let scanTimer = null;
   let observer = null;
 
@@ -42,7 +44,7 @@
     toggle = document.createElement("button");
     toggle.id = TOGGLE_ID;
     toggle.type = "button";
-    toggle.innerHTML = '<span class="tint-clean-dot"></span><span class="tint-clean-word">Tint</span>';
+    toggle.innerHTML = '<span class="tint-clean-toggle-dot"></span><span class="tint-clean-word">Tint</span>';
     toggle.setAttribute("aria-pressed", "false");
 
     toggle.addEventListener("click", () => {
@@ -51,12 +53,11 @@
       syncToggle();
 
       if (enabled) {
-        cleanup();
-        scan();
+        analyzePage();
         startObserver();
       } else {
         stopObserver();
-        cleanup();
+        clearSignal();
       }
     });
 
@@ -76,7 +77,7 @@
     if (style.display === "none" || style.visibility === "hidden" || Number(style.opacity) === 0) return false;
     const rect = el.getBoundingClientRect();
     if (rect.width < 32 || rect.height < 10) return false;
-    if (rect.bottom < 0 || rect.top > innerHeight) return false;
+    if (rect.bottom < -400 || rect.top > innerHeight + 900) return false;
     return true;
   }
 
@@ -84,16 +85,15 @@
     if (!el || !el.tagName) return true;
     const tag = el.tagName.toLowerCase();
     if (["script", "style", "noscript", "svg", "path", "img", "video", "canvas", "input", "textarea", "select"].includes(tag)) return true;
-    if (el.closest(`#${TOGGLE_ID}`)) return true;
-    if (el.closest("[contenteditable='true']")) return true;
-    if (el.closest("pre, code")) return true;
+    if (el.closest(`#${TOGGLE_ID}, #${DOT_ID}, #${PANEL_ID}`)) return true;
+    if (el.closest("[contenteditable='true'], pre, code")) return true;
     return false;
   }
 
   function isUseful(text) {
     if (!text) return false;
     if (text.length < 12) return false;
-    if (text.length > 360) return false;
+    if (text.length > 700) return false;
     if (/^[\d\s.,:;|/\\\-–—+%€$£()]+$/.test(text)) return false;
     return true;
   }
@@ -118,12 +118,12 @@
       .map(el => ({ el, text: normalize(el.innerText || el.textContent) }))
       .filter(item => isUseful(item.text))
       .filter(item => {
-        const key = item.text.slice(0, 120);
+        const key = item.text.slice(0, 160);
         if (seen.has(key)) return false;
         seen.add(key);
         return true;
       })
-      .slice(0, 80);
+      .slice(0, 120);
   }
 
   function has(text, words) {
@@ -135,116 +135,132 @@
     scores[atmosphere] += amount;
   }
 
-  function localAnalyze(text) {
+  function scoreText(text) {
     const scores = { green: 0, blue: 0, orange: 0, gray: 0, violet: 0 };
 
-    if (has(text, ["urgent", "breaking", "shocking", "secret", "exposed", "warning", "danger", "must see", "you won't believe", "insane", "crazy", "viral", "panic", "scam", "hidden truth", "destroyed", "collapse", "last chance"])) add(scores, "orange", 3);
-    if (has(text, ["how to", "guide", "tutorial", "explained", "analysis", "review", "overview", "documentation", "manual", "case study", "comparison", "learn", "what is", "why", "step by step", "course", "lesson"])) add(scores, "blue", 2.4);
-    if (has(text, ["calm", "slow", "nature", "garden", "community", "local", "human", "honest", "family", "care", "repair", "forest", "home", "simple", "peaceful", "grounded", "natural", "rest", "craft"])) add(scores, "green", 2.6);
-    if (has(text, ["ai generated", "automated", "template", "generic", "spam", "copy paste", "faceless", "mass produced", "bot", "synthetic", "auto-generated"])) add(scores, "gray", 2.7);
-    if (has(text, ["premium", "exclusive", "luxury", "elite", "status", "success", "dream", "transform", "become", "unlock", "level up", "high performance", "limited offer", "join now", "masterclass", "personal brand"])) add(scores, "violet", 2.5);
+    if (has(text, ["urgent", "breaking", "shocking", "secret", "exposed", "warning", "danger", "must see", "you won't believe", "insane", "crazy", "viral", "panic", "scam", "hidden truth", "destroyed", "collapse", "last chance", "forbidden", "banned", "revealed", "brutal", "risk", "threat", "crisis", "war", "attack", "controversy", "outrage", "drama", "worst", "never do this"])) add(scores, "orange", 3.2);
+    if (has(text, ["how to", "guide", "tutorial", "explained", "analysis", "review", "overview", "documentation", "manual", "case study", "comparison", "learn", "what is", "why", "step by step", "course", "lesson", "report", "study", "data", "research", "statistics", "market", "price", "features", "details"])) add(scores, "blue", 2.0);
+    if (has(text, ["calm", "slow", "nature", "garden", "community", "local", "human", "honest", "family", "care", "repair", "forest", "home", "simple", "peaceful", "grounded", "natural", "rest", "craft", "traditional", "healthy", "sustainable", "trust", "personal story"])) add(scores, "green", 2.7);
+    if (has(text, ["ai generated", "automated", "template", "generic", "spam", "copy paste", "faceless", "mass produced", "bot", "synthetic", "auto-generated", "generated", "placeholder", "stock photo", "fake", "affiliate", "programmatic"])) add(scores, "gray", 2.8);
+    if (has(text, ["premium", "exclusive", "luxury", "elite", "status", "success", "dream", "transform", "become", "unlock", "level up", "high performance", "limited offer", "join now", "masterclass", "personal brand", "best", "profit", "rare", "collection", "upgrade", "pro", "winning", "growth", "freedom", "lifestyle"])) add(scores, "violet", 2.7);
 
     if (/[!?]{2,}/.test(text)) add(scores, "orange", 0.8);
     if (/\b(buy now|subscribe|sign up|get started|claim|download|try free)\b/i.test(text)) add(scores, "violet", 1.2);
     if (/\b(data|report|study|research|price|features|specification)\b/i.test(text)) add(scores, "blue", 1.1);
 
-    const ranked = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-    const [atmosphere, score] = ranked[0];
+    return scores;
+  }
 
-    if (!score) {
-      return { atmosphere: "blue", confidence: 0.18, label: "low signal" };
+  function summarize(scores, blockCount) {
+    const total = Object.values(scores).reduce((sum, value) => sum + value, 0);
+    const ranked = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+    const [primary, primaryScore] = ranked[0];
+    const [secondary, secondaryScore] = ranked[1];
+
+    if (!blockCount || !total || primaryScore < 1) {
+      return {
+        primary: "blue",
+        secondary: null,
+        confidence: 0.14,
+        label: "low signal",
+        summary: "weak visible pressure",
+        scores
+      };
     }
 
+    const confidence = Math.min(0.96, Math.max(0.25, primaryScore / Math.max(total, 1)));
+    const includeSecondary = secondaryScore > 0 && secondaryScore >= primaryScore * 0.45;
+    const mix = includeSecondary ? `${LABELS[primary]} + ${LABELS[secondary]}` : LABELS[primary];
+
     return {
-      atmosphere,
-      confidence: Math.min(0.95, 0.32 + score * 0.13),
-      label: LABELS[atmosphere]
+      primary,
+      secondary: includeSecondary ? secondary : null,
+      confidence,
+      label: mix,
+      summary: includeSecondary ? `Mostly ${LABELS[primary]}, with ${LABELS[secondary]}.` : `Mostly ${LABELS[primary]}.`,
+      scores
     };
   }
 
-  async function analyzeBatch(blocks) {
-    if (!API_ENDPOINT) {
-      return blocks.map(block => ({ id: block.id, ...localAnalyze(block.text) }));
-    }
-
-    try {
-      const response = await fetch(API_ENDPOINT, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ blocks: blocks.map(({ id, text }) => ({ id, text })) })
-      });
-      if (!response.ok) throw new Error(`Tint API ${response.status}`);
-      const json = await response.json();
-      return Array.isArray(json.results) ? json.results : [];
-    } catch (error) {
-      console.warn("[Tint] API failed, falling back to local rules", error);
-      return blocks.map(block => ({ id: block.id, ...localAnalyze(block.text) }));
-    }
-  }
-
-  function applyTint(el, result) {
-    if (!enabled || !el || !result) return;
-
-    const atmosphere = result.atmosphere || "blue";
-    const confidence = Math.max(0.08, Math.min(1, Number(result.confidence || 0.2)));
-
-    el.classList.add(OWNED_CLASS);
-    el.dataset.tintAtmosphere = atmosphere;
-    el.dataset.tintLabel = result.label || LABELS[atmosphere] || "signal";
-    el.style.setProperty("--tint-clean-rgb", COLORS[atmosphere] || COLORS.blue);
-    el.style.setProperty("--tint-clean-i", confidence.toFixed(2));
-  }
-
-  async function scan() {
-    if (!enabled) return;
-
-    const candidates = collectTextBlocks().filter(({ el }) => el.getAttribute(SCANNED_ATTR) !== "1");
-    if (!candidates.length) return;
-
-    const blocks = candidates.map((item, index) => ({
-      id: `b${Date.now()}_${index}`,
-      text: item.text,
-      el: item.el
-    }));
-
-    blocks.forEach(block => block.el.setAttribute(SCANNED_ATTR, "1"));
-
-    const results = await analyzeBatch(blocks);
-    const byId = new Map(results.map(result => [result.id, result]));
+  function combineScores(blocks) {
+    const totals = { green: 0, blue: 0, orange: 0, gray: 0, violet: 0 };
 
     for (const block of blocks) {
-      if (!enabled) return;
-      applyTint(block.el, byId.get(block.id));
+      const scores = scoreText(block.text);
+      const weight = Math.min(2.2, Math.max(0.7, block.text.length / 90));
+      for (const key of Object.keys(totals)) {
+        totals[key] += scores[key] * weight;
+      }
     }
+
+    return summarize(totals, blocks.length);
   }
 
-  function cleanup() {
+  function clearSignal() {
     clearTimeout(scanTimer);
     scanTimer = null;
-
-    document.querySelectorAll(`.${OWNED_CLASS}`).forEach(el => {
-      el.classList.remove(OWNED_CLASS);
-      delete el.dataset.tintAtmosphere;
-      delete el.dataset.tintLabel;
-      el.style.removeProperty("--tint-clean-rgb");
-      el.style.removeProperty("--tint-clean-i");
-    });
-
-    document.querySelectorAll(`[${SCANNED_ATTR}]`).forEach(el => el.removeAttribute(SCANNED_ATTR));
+    dot?.remove();
+    panel?.remove();
+    dot = null;
+    panel = null;
   }
 
-  function scheduleScan(delay = 400) {
+  function createSignal(result) {
+    clearSignal();
+    if (!enabled || !result) return;
+
+    dot = document.createElement("button");
+    dot.id = DOT_ID;
+    dot.type = "button";
+    dot.setAttribute("aria-label", "Tint page signal");
+    dot.style.setProperty("--tint-primary", COLORS[result.primary] || COLORS.blue);
+    dot.style.setProperty("--tint-secondary", COLORS[result.secondary] || COLORS[result.primary] || COLORS.blue);
+    dot.classList.toggle("mixed", Boolean(result.secondary));
+
+    dot.addEventListener("click", () => {
+      panel?.classList.toggle("show");
+    });
+
+    panel = document.createElement("div");
+    panel.id = PANEL_ID;
+    panel.innerHTML = `
+      <div class="tint-clean-panel-title">${escapeHtml(result.label)}</div>
+      <div class="tint-clean-panel-copy">${escapeHtml(result.summary)}</div>
+    `;
+
+    document.documentElement.appendChild(dot);
+    document.documentElement.appendChild(panel);
+  }
+
+  function escapeHtml(value) {
+    return String(value || "").replace(/[&<>'"]/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      "'": "&#039;",
+      '"': "&quot;"
+    }[char]));
+  }
+
+  async function analyzePage() {
+    if (!enabled) return;
+    const blocks = collectTextBlocks();
+    const result = combineScores(blocks);
+    createSignal(result);
+  }
+
+  function scheduleAnalyze(delay = 500) {
     if (!enabled) return;
     clearTimeout(scanTimer);
     scanTimer = setTimeout(() => {
       scanTimer = null;
-      scan();
+      analyzePage();
     }, delay);
   }
 
   function startObserver() {
     if (observer) return;
-    observer = new MutationObserver(() => scheduleScan(700));
+    observer = new MutationObserver(() => scheduleAnalyze(900));
     observer.observe(document.documentElement, { childList: true, subtree: true });
   }
 
@@ -261,17 +277,16 @@
       enabled = Boolean(result.tintCleanEnabled);
       syncToggle();
       if (enabled) {
-        cleanup();
-        scan();
+        analyzePage();
         startObserver();
       } else {
-        cleanup();
         stopObserver();
+        clearSignal();
       }
     });
 
-    window.addEventListener("scroll", () => scheduleScan(500), { passive: true });
-    window.addEventListener("resize", () => scheduleScan(500), { passive: true });
+    window.addEventListener("scroll", () => scheduleAnalyze(700), { passive: true });
+    window.addEventListener("resize", () => scheduleAnalyze(700), { passive: true });
   }
 
   if (document.readyState === "loading") {

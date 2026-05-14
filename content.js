@@ -978,8 +978,20 @@
     return Boolean(el?.closest?.("ytd-topbar-logo-renderer, a#logo, #logo-icon-container"));
   }
 
+  function canShowYouTubeLogoPreview() {
+    return enabled
+      && isYouTubePage()
+      && !isYouTubeShortsPage()
+      && !document.body.classList.contains("__tint-youtube-atmosphere");
+  }
+
+  function clearYouTubeLogoPreview() {
+    document.body.classList.remove("__tint-youtube-logo-preview");
+    if (pageWashEl) pageWashEl.classList.remove("__tint-page-wash-logo-preview");
+  }
+
   function showYouTubeLogoPreview() {
-    if (!enabled || !isYouTubePage() || isYouTubeShortsPage() || document.body.classList.contains("__tint-youtube-atmosphere")) return;
+    if (!canShowYouTubeLogoPreview()) return;
     const wash = ensurePageWash();
     wash.classList.add("__tint-page-wash-logo-preview");
     wash.classList.remove("__tint-page-wash-shorts");
@@ -991,8 +1003,7 @@
   }
 
   function hideYouTubeLogoPreview() {
-    document.body.classList.remove("__tint-youtube-logo-preview");
-    if (pageWashEl) pageWashEl.classList.remove("__tint-page-wash-logo-preview");
+    clearYouTubeLogoPreview();
     if (!isYouTubePage() || document.body.classList.contains("__tint-youtube-atmosphere")) return;
     clearYouTubePageAtmosphere();
   }
@@ -1012,6 +1023,7 @@
     document.body.classList.remove("__tint-on");
     clearTimeout(scrollAnalyzeTimer);
     scrollAnalyzeTimer = null;
+    clearYouTubeLogoPreview();
     clearYouTubePageAtmosphere();
     if (pageWashEl) pageWashEl.classList.remove("__tint-page-wash-logo-preview", "__tint-page-wash-shorts");
     hideCard();

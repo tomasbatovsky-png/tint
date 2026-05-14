@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Tint Clean MVP",
+  "version": "0.1.0",
+  "description": "A local perceptual layer for text on the web. Text-first. No page wash. No card tinting.",
+  "permissions": ["storage"],
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

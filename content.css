@@ -86,9 +86,9 @@
 }
 
 /* ============================================================
- * PAGE-LEVEL YOUTUBE ATMOSPHERE
- * Extremely low-opacity radial wash. It has no edge, no box, and no
- * hit area; the page should feel changed before it looks changed.
+ * PAGE WASH
+ * Hidden by default. Non-Shorts YouTube only uses it for the logo hover
+ * preview; Shorts keeps its fullscreen ambient behavior below.
  * ============================================================ */
 #__tint-page-wash {
   position: fixed !important;
@@ -109,8 +109,8 @@
   mix-blend-mode: multiply !important;
 }
 
-body.__tint-on.__tint-youtube-atmosphere #__tint-page-wash,
-body.__tint-on.__tint-youtube-logo-preview #__tint-page-wash {
+body.__tint-on.__tint-youtube-logo-preview #__tint-page-wash,
+body.__tint-on.__tint-youtube-shorts #__tint-page-wash {
   opacity: 1 !important;
 }
 
@@ -169,10 +169,12 @@ body.__tint-on .__tint-mark:hover::before {
 }
 
 /* ============================================================
- * YOUTUBE VIDEO CARD ATMOSPHERE
- * Low-opacity thumbnail/card cluster tint with tiny hover labels.
+ * YOUTUBE CARD ATMOSPHERE
+ * One shared hover-only model for homepage, watch sidebar, and search.
  * ============================================================ */
 body.__tint-on .__tint-youtube-card {
+  position: relative !important;
+  overflow: visible !important;
   cursor: inherit !important;
 }
 
@@ -188,6 +190,7 @@ body.__tint-on .__tint-youtube-card::before {
   filter: blur(2px) saturate(102%) !important;
   mix-blend-mode: multiply !important;
   opacity: 0 !important;
+  transition-delay: 0ms !important;
 }
 
 body.__tint-on .__tint-youtube-card:hover::before {
@@ -228,13 +231,6 @@ body.__tint-on .__tint-youtube-card::after {
 body.__tint-on .__tint-youtube-card:hover::after {
   opacity: 0.82 !important;
   transform: translateY(0) !important;
-}
-
-
-body.__tint-on .__tint-youtube-watch-card {
-  position: relative !important;
-  overflow: visible !important;
-  cursor: inherit !important;
 }
 
 /* ============================================================

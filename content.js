@@ -12,7 +12,7 @@
  * No network. No DOM mutation outside our own UI + a few data attributes.
  */
 (() => {
-  if (window.__tintInjected) return;
+  if (window.__tintInjected && document.getElementById("__tint-toggle")) return;
   window.__tintInjected = true;
 
   const ATM_COLORS = {
@@ -55,7 +55,14 @@
    * CORE UI / TOGGLE LIFECYCLE
    * Owns the floating Tint switch, persisted enabled state, and enable/disable entrypoint.
    * ============================================================ */
+  function syncToggleState() {
+    if (!toggleEl) return;
+    toggleEl.classList.toggle("on", enabled);
+    toggleEl.setAttribute("aria-pressed", String(enabled));
+  }
+
   function createToggle() {
+    document.getElementById("__tint-toggle")?.remove();
     toggleEl = document.createElement("button");
     toggleEl.id = "__tint-toggle";
     toggleEl.className = "__tint-switch";
@@ -66,8 +73,7 @@
     `;
     toggleEl.addEventListener("click", () => {
       enabled = !enabled;
-      toggleEl.classList.toggle("on", enabled);
-      toggleEl.setAttribute("aria-pressed", String(enabled));
+      syncToggleState();
       chrome.storage.local.set({ tintEnabled: enabled });
       if (enabled) enableTint();
       else disableTint();
@@ -80,6 +86,7 @@
    * Owns the optional floating explanation card for eligible marked elements.
    * ============================================================ */
   function createCard() {
+    document.getElementById("__tint-card")?.remove();
     cardEl = document.createElement("div");
     cardEl.id = "__tint-card";
     cardEl.innerHTML = `
@@ -1131,11 +1138,13 @@
     createCard();
     createPageWash();
     chrome.storage.local.get(["tintEnabled"], (result) => {
-      if (result.tintEnabled) {
-        enabled = true;
-        toggleEl.classList.add("on");
-        toggleEl.setAttribute("aria-pressed", "true");
+      enabled = Boolean(result.tintEnabled);
+      syncToggleState();
+
+      if (enabled) {
         enableTint();
+      } else {
+        disableTint();
       }
     });
     observer.observe(document.body, { childList: true, subtree: true });

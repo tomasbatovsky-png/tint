@@ -1,4 +1,4 @@
-const ATMOSPHERES = [
+export const ATMOSPHERES = [
   { key: "neutralInfo", label: "Neutral info", phrase: "neutral info", color: "blue" },
   { key: "attentionHeavy", label: "Attention-heavy", phrase: "attention-heavy", color: "orange" },
   { key: "syntheticRhythm", label: "Synthetic rhythm", phrase: "synthetic rhythm", color: "gray" },
@@ -13,7 +13,7 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
-function scoreText(input) {
+export function scoreText(input) {
   const text = String(input || "").replace(/\s+/g, " ").trim();
   const lower = text.toLowerCase();
   const words = lower.split(/\s+/).filter(Boolean);
@@ -51,7 +51,6 @@ function scoreText(input) {
     groundedPace: 2 + grounded
   };
 
-  // Tone modifiers. Keep them small; this is atmosphere, not certainty.
   if (wordCount > 250 && attention < 2) base.neutralInfo += 8;
   if (wordCount > 350 && grounded > 2 && synthetic < 3) base.groundedPace += 5;
   if (synthetic > 2 && neutral > 1) base.syntheticRhythm += 4;
@@ -76,7 +75,7 @@ function normalizePercentages(raw) {
   return rounded;
 }
 
-function summarizeMix(mix) {
+export function summarizeMix(mix) {
   const ranked = Object.entries(mix).sort((a, b) => b[1] - a[1]);
   const [firstKey, firstValue] = ranked[0];
   const [secondKey, secondValue] = ranked[1];
@@ -108,18 +107,12 @@ function stripHtml(html) {
     .trim();
 }
 
-function extractReadableText(html) {
-  const title = (String(html).match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || "").trim();
-  const meta = (String(html).match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["'][^>]*>/i)?.[1] || "").trim();
-  const headings = Array.from(String(html).matchAll(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi)).map(match => stripHtml(match[1])).join(" ");
-  const paragraphs = Array.from(String(html).matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)).map(match => stripHtml(match[1])).join(" ");
-  const body = stripHtml(html).slice(0, 50000);
+export function extractReadableText(html) {
+  const source = String(html || "");
+  const title = (source.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || "").trim();
+  const meta = (source.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["'][^>]*>/i)?.[1] || "").trim();
+  const headings = Array.from(source.matchAll(/<h[1-3][^>]*>([\s\S]*?)<\/h[1-3]>/gi)).map(match => stripHtml(match[1])).join(" ");
+  const paragraphs = Array.from(source.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)).map(match => stripHtml(match[1])).join(" ");
+  const body = stripHtml(source).slice(0, 50000);
   return [title, meta, headings, paragraphs || body].join(" ").replace(/\s+/g, " ").trim().slice(0, 50000);
 }
-
-module.exports = {
-  ATMOSPHERES,
-  scoreText,
-  summarizeMix,
-  extractReadableText
-};

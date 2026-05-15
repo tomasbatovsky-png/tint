@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import dns from "node:dns/promises";
 import net from "node:net";
-import { extractReadableText, scoreText, summarizeMix } from "../../../lib/atmosphere";
+import { extractReadableText, scoreText, summarizeMix } from "../../../../lib/atmosphere";
 
 export const runtime = "nodejs";
 

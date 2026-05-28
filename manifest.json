@@ -1,29 +1,18 @@
 {
   "manifest_version": 3,
   "name": "Tint",
-  "version": "0.1.0",
-  "description": "A perceptual layer for the internet. Tint visualizes the psychological atmosphere of web pages. Local heuristics only — no servers, no API calls, no AI.",
+  "version": "0.2.0",
+  "description": "A local text-first signal layer for the web. Tint highlights psychological atmosphere in visible text blocks. Local heuristics only - no servers, no API calls, no AI.",
   "permissions": ["storage"],
   "content_scripts": [
     {
       "matches": [
-        "https://www.reddit.com/*",
-        "https://old.reddit.com/*",
-        "https://reddit.com/*",
-        "https://new.reddit.com/*",
-        "https://www.youtube.com/*",
-        "https://youtube.com/*",
-        "https://*.youtube.com/*"
+        "http://*/*",
+        "https://*/*"
       ],
       "js": ["signals.js", "content.js"],
       "css": ["content.css"],
       "run_at": "document_idle"
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": ["signals.json"],
-      "matches": ["<all_urls>"]
     }
   ]
 }
